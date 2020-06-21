@@ -6,8 +6,13 @@ This is the main class for running the entire game framework
 
 #import from libraries
 import enum
+import random
 
 #import from ros
+
+user_picked = (0, 0)
+user_placed = (0, 0)
+
 
 class StateMachine(enum.Enum):
 	S_ROBOT_ASSIST = 1
@@ -67,6 +72,7 @@ def user_action(sm):
 		print("U_PICK")
 		sm.CURRENT_STATE = sm.S_ROBOT_FEEDBACK
 		sm.user_picked_token = True
+		user_picked = (random.randint(1, 100), random.randint(1, 10))
 		return sm.user_picked_token
 	def robot_provide_feedback(sm):
 		print("R_FEEDBACK")
@@ -77,23 +83,37 @@ def user_action(sm):
 	'''either they can place it back '''
 	def user_place(sm):
 		print("U_PLACE")
+		#check where the user will place the token
 		def user_place_token_back(sm):
 			print("U_PLACE_BACK")
 			sm.CURRENT_STATE = sm.S_USER_ACTION
 			sm.b_user_placed_token_back = True
+			token_id = random.randint(1, 100)
+			rnd_loc = random.randint(1, 10)
+			loc_from = rnd_loc
+			loc_to = rnd_loc
+			user_placed = (token_id, loc_from, loc_to)
 			return sm.b_user_placed_token_back
 		'''or they can place it in the solution row'''
 		def user_place_token_sol(sm):
 			print("U_PLACE_SOL")
 			sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
 			sm.b_user_placed_token_sol = True
+			token_id = random.randint(1, 100)
+			loc_from = random.randint(1, 10)
+			loc_to = random.randint(1, 10)
+			user_placed = (token_id, loc_from, loc_to)
 			return sm.b_user_placed_token_sol
 		'''return where the user placed the token'''
 		#here we get the token that has been placed and trigger one or the other action
-		if user_place_token_back(sm):
+
+		if random.random()>0.5:
+			user_place_token_back(sm)
 			sm.CURRENT_STATE = sm.S_USER_ACTION
-		elif user_place_token_sol(sm):
+		else:
+			user_place_token_sol(sm)
 			sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
+
 
 	sm.CURRENT_STATE = sm.S_USER_ACTION
 	if user_pick_token(sm):
@@ -120,12 +140,26 @@ def num_to_func_to_str(argument):
 	return func()
 
 sm = StateMachine(1)
-i=0
-while i<100:
+token_to_place = 5
+n_token_correct = 0
+n_attempt_per_token = 0
+n_total_attempt = 0
+iter = 0
+
+while n_token_correct<token_to_place:
 	if sm.CURRENT_STATE.value == sm.S_ROBOT_ASSIST.value:
 		robot_provide_assistance(sm)
 	elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
 		user_action(sm)
+		n_attempt_per_token += 1
+		n_total_attempt += 1
 	elif sm.CURRENT_STATE.value == sm.S_ROBOT_OUTCOME.value:
-		robot_provide_outcome()
-	i += 1
+		robot_provide_outcome(sm)
+		n_token_correct += 1
+		print("game_state:", n_token_correct, "n_attempt_token:", n_attempt_per_token)
+		n_attempt_per_token = 0
+
+
+print("n_token ", n_token_correct, " n_total_attempt ",n_total_attempt)
+iter += 1
+
