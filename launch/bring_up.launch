@@ -9,12 +9,13 @@
   <arg name="assistive_actions" default="$(find xml_reader)/src/xml_reader/assistive_actions_definition_es.xml" />
       <param name="/assistive_actions" value="$(arg assistive_actions)" />
 
+  <arg name="objective" default="ascending" />
+      <param name="/objective" value="$(arg objective)" /> 
 
   <!-- Final tokens locations -->
-  <rosparam param="solution_board">
+  <rosparam param="solution_ascending">
     ['111', '158', '183', '192', '253']
   </rosparam>
-
  
   <rosparam param="tokens_number">
     [ '111', '158',  '183','192', '253','328', '376', '394', '449','463', '475', '486','517', '744',  '819']
