@@ -7,6 +7,7 @@ This is the main class for running the entire game framework
 #import from libraries
 import enum
 import random
+import time
 
 #import from ros
 import rospy
@@ -38,6 +39,14 @@ class Game(object):
 		self.picked = False
 		self.placed = False
 		self.moved_back = False
+		self.react_time_per_token_t0 = 0
+		self.react_time_per_token_t1 = 0.0
+		self.elapsed_time_per_token_t0 = 0.0
+		self.elapsed_time_per_token_t1 = 0.0
+		self.total_elapsed_time = 0
+		self.move_info = {'token_id':'', 'from':'', 'to':'', 'robot_assistance':'', 'react_time':'', 'elapsed_time':''}
+		self.move_info_vect = list()
+		#log info
 
 	def get_board_event_callback(self, msg):
 		'''callback from the topic board_status to get the status of the current_board'''
@@ -60,7 +69,6 @@ class Game(object):
 
 	def set_objective(self, n_token):
 		'''The method return a list with the tokens ordered based on the solution of the exercise'''
-		rospy.sleep(0.1)
 		board_ = self.current_board[:]
 		#remove the empty cells from the current_board
 		board_filtered = list(filter(lambda x: x!="0", board_))
@@ -137,12 +145,13 @@ class StateMachine(enum.Enum):
 	b_robot_moved_correct_token = False
 	b_user_reached_max_attempt = False
 
-	def robot_provide_assistance(self):
+	def robot_provide_assistance(self, game):
 		'''
 		Robot action of assistance combining speech and gesture
 		:return: True when the action has been completed
 		'''
 		print("R_ASSISTANCE")
+		game.move_info['robot_assistance'] = random.randint(0,4)
 		rospy.sleep(2.0)
 		self.b_robot_assist_finished = True
 		self.CURRENT_STATE = self.S_USER_ACTION
@@ -154,7 +163,6 @@ class StateMachine(enum.Enum):
 		:return:
 		'''
 		print("R_FEEDBACK")
-		rospy.sleep(2.0)
 		self.b_robot_feedback_finished = True
 		self.CURRENT_STATE = self.S_USER_PLACE
 		return self.b_robot_feedback_finished
@@ -166,7 +174,6 @@ class StateMachine(enum.Enum):
 		:return:
 		'''
 		print("R_OUTCOME")
-		rospy.sleep(2.0)
 		outcome = 0
 		#get current move and check if it is the one expeceted in the solution list
 		if game.detected_token[0] == game.solution[game.n_correct_move]  \
@@ -224,9 +231,10 @@ class StateMachine(enum.Enum):
 		#get the current solution
 		token = game.solution[game.n_correct_move]
 		_from = game.initial_board.index(token)
-		_to = game.solution.index(token)
-		press_key = input("Please move the token {} at loc {}".format(token, _to))
-
+		_to = game.solution.index(token)+1
+		press_key = raw_input("Please move the token {} at loc {}".format(token, _to))
+		game.set_n_correct_move(game.get_n_correct_move()+1)
+		game.set_n_attempt_per_token(1)
 
 	def user_move_back(self, game):
 		#user moved the token in an incorrect location
@@ -235,7 +243,7 @@ class StateMachine(enum.Enum):
 		#get the initial location of the placed token and move back there
 		token, _to, _from = game.detected_token
 		while(game.detected_token!=[token, _from, _to]):
-			print("Wait until the user doesn move the token back")
+			pass
 		self.CURRENT_STATE = self.S_ROBOT_ASSIST
 		self.b_user_moved_token_back = True
 		return self.b_user_moved_token_back
@@ -245,17 +253,21 @@ class StateMachine(enum.Enum):
 		'''We wait until the user pick a token'''
 		print("U_ACTION")
 		def user_pick_token(sm, game):
+			game.react_time_per_token_t0 = time.time()
 			print("U_PICK")
 			sm.CURRENT_STATE = sm.S_ROBOT_FEEDBACK
 			detected_token, picked, _, _ = game.get_move_event()
 			while(not picked):
 				detected_token, picked, _, _ = game.get_move_event()
+			game.elapsed_time_per_token_t0 = time.time()
+			game.react_time_per_token_t1 = time.time()-game.react_time_per_token_t0
+			game.move_info['react_time'] = game.react_time_per_token_t1
+			game.move_info['token_id'], game.move_info['from'] = game.detected_token[0], game.detected_token[1]
 			sm.user_picked_token = True
 			user_picked = detected_token
 			return sm.user_picked_token
 		def robot_provide_feedback(sm):
 			print("R_FEEDBACK")
-			rospy.sleep(2.0)
 			sm.CURRENT_STATE = sm.S_USER_PLACE
 			sm.robot_provided_feeback_finished = True
 			return sm.robot_provided_feeback_finished
@@ -268,12 +280,18 @@ class StateMachine(enum.Enum):
 				print("U_PLACE_BACK")
 				sm.CURRENT_STATE = sm.S_USER_ACTION
 				sm.b_user_placed_token_back = True
+				game.elapsed_time_per_token_t1 = time.time()-game.elapsed_time_per_token_t0
+				game.move_info['to'] = game.detected_token[2]
+				game.move_info['elapsed_time'] = game.elapsed_time_per_token_t1
 				return sm.b_user_placed_token_back
 			'''or they can place it in the solution row'''
 			def user_place_token_sol(sm):
 				print("U_PLACE_SOL")
 				sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
 				sm.b_user_placed_token_sol = True
+				game.elapsed_time_per_token_t1 = time.time() - game.elapsed_time_per_token_t0
+				game.move_info['to'] = game.detected_token[2]
+				game.move_info['elapsed_time'] = game.elapsed_time_per_token_t1
 				return sm.b_user_placed_token_sol
 			'''return where the user placed the token'''
 			#here we get the token that has been placed and trigger one or the other action
@@ -325,25 +343,30 @@ def main():
 
 	game = Game()
 	game.set_n_solution(5)
-	game.set_n_max_attempt_per_token(2)
-	rospy.sleep(0.1)
+	game.set_n_max_attempt_per_token(4)
 	current_board = game.get_board_event()
 	#game.solution = game.set_objective(n_solution)
 	sm = StateMachine(1)
 
 	while game.get_n_correct_move()<game.n_solution:
 		if sm.CURRENT_STATE.value == sm.S_ROBOT_ASSIST.value:
-			sm.robot_provide_assistance()
+			sm.robot_provide_assistance(game)
 		elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
+			time_to_act = time.time()
 			sm.user_action(game)
+			game.total_elapsed_time += time.time()-time_to_act
 		elif sm.CURRENT_STATE.value == sm.S_ROBOT_OUTCOME.value:
 			sm.robot_provide_outcome(game)
 
 			print("game_state:", game.get_n_correct_move(), "n_attempt_token:", game.get_n_attempt_per_token())
-
+			print("react time: ", game.react_time_per_token_t1, "elapsed time: ", game.elapsed_time_per_token_t1)
+			game.move_info_vect.append(game.move_info.copy())
+			print(game.move_info)
 
 	print("correct_move ", game.get_n_correct_move,
 	      " n_mistakes ", game.n_mistakes)
+	for instance in game.move_info_vect:
+		print(instance)
 
 
 
