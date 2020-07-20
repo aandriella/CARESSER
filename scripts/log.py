@@ -3,21 +3,14 @@ import os
 import datetime
 
 class Log():
-	def __init__(self, filename, **argv):
+	def __init__(self, filename):
 		self.filename = filename
-		self.variables = self.add_variables(**argv)
 
-	def add_variables(self, **argv):
-		with open(self.filename, 'a') as f:
-			for arg in argv:
-				f.write(arg+"\t")
-			f.write("\n")
-		f.close()
 
-	def add_row_entry(self, **argv):
+	def add_row_entry(self, log):
 		with open(self.filename, 'a') as f:
-			for arg in argv:
-				f.write(argv.get(arg)+"\t")
+			for key, value in log.items():
+				f.write(str(value)+"\t")
 			f.write("\n")
 		f.close()
 

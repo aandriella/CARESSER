@@ -3,11 +3,12 @@
 This is the main class for running the entire game framework
 '''
 #import modules and classes
-
+from log import Log
 #import from libraries
 import enum
 import random
 import time
+import os
 
 #import from ros
 import rospy
@@ -19,34 +20,48 @@ user_placed = (0, 0)
 
 
 class Game(object):
-	def __init__(self):
+	def __init__(self, task_length, n_max_attempt_per_token, timeout):
 		rospy.init_node('big_hero', anonymous=True)
 		# subscriber for getting info from the board
 		rospy.Subscriber("/detected_move", TokenMsg, self.get_move_event_callback)
 		rospy.Subscriber("/board_status", BoardMsg, self.get_board_event_callback)
-		# get the objective of the exercise
+		#get the objective of the exercise from the launch file
+		self.objective = rospy.get_param("/objective")
+
+		#we need a sleep in order to give the system the time to get the board info
 		self.current_board = []
 		rospy.sleep(2)
 		self.initial_board = self.get_board_event()
-		self.objective = rospy.get_param("/objective")
-		self.solution = self.set_objective(5)
+		self.task_length = task_length
+		self.n_max_attempt_per_token = n_max_attempt_per_token
+		self.solution = self.set_objective(self.task_length)
+		self.timeout = timeout
+		self.robot_assistance = 0
+		self.avg_robot_assistance_per_move = 0
+		#counters
 		self.n_attempt_per_token = 1
-		self.n_max_attempt_per_token = 5#n_max_attempt
 		self.n_mistakes = 0
-		self.n_solution = 10#n_solution
 		self.n_correct_move = 0
+		#subscriber variables from detect_move
 		self.detected_token = []
 		self.picked = False
 		self.placed = False
 		self.moved_back = False
-		self.react_time_per_token_t0 = 0
-		self.react_time_per_token_t1 = 0.0
-		self.elapsed_time_per_token_t0 = 0.0
-		self.elapsed_time_per_token_t1 = 0.0
-		self.total_elapsed_time = 0
-		self.move_info = {'token_id':'', 'from':'', 'to':'', 'robot_assistance':'', 'react_time':'', 'elapsed_time':''}
-		self.move_info_vect = list()
-		#log info
+		#logger
+		self.react_time_per_token_spec_t0 = 0.0
+		self.react_time_per_token_gen_t0 = 0.0
+		self.react_time_per_token_spec_t1 = 0.0
+		self.react_time_per_token_gen_t1 = 0.0
+		self.elapsed_time_per_token_gen_t0 = 0.0
+		self.elapsed_time_per_token_spec_t0 = 0.0
+		self.elapsed_time_per_token_gen_t1 = 0.0
+		self.elapsed_time_per_token_spec_t1 = 0.0
+		self.total_elapsed_time = 0.0
+		self.move_info_gen = {'token_id':'', 'from':'', 'to':'', 'avg_robot_assistance_per_move':'', 'cum_react_time':'', 'cum_elapsed_time':'', 'attempt':''}
+		self.move_info_spec = {'token_id': '', 'from': '', 'to': '', 'robot_assistance': '', 'react_time': '',
+		                      'elapsed_time': '', 'attempt': ''}
+		self.move_info_gen_vect = list()
+		self.move_info_spec_vect = list()
 
 	def get_board_event_callback(self, msg):
 		'''callback from the topic board_status to get the status of the current_board'''
@@ -117,9 +132,20 @@ class Game(object):
 
 class StateMachine(enum.Enum):
 
-	#def __init__(self, e):
-
-	#initialise the node and the subscriber
+	def __init__(self, e):
+		self.b_robot_assist_finished = False
+		self.b_robot_feedback_finished = False
+		self.b_user_picked_token = False
+		self.b_user_placed_token_back = False
+		self.b_user_placed_token_sol = False
+		self.b_robot_outcome_finised = False
+		self.b_robot_moved_token_back = False
+		self.b_user_moved_token_back = False
+		self.b_robot_moved_correct_token = False
+		self.b_user_reached_max_attempt = False
+		self.b_user_reached_timeout = False
+		self.b_robot_reengaged_user = False
+	'''States of the State machine'''
 	S_ROBOT_ASSIST = 1
 	S_USER_ACTION = 2
 	S_USER_PICK_TOKEN = 3
@@ -131,30 +157,26 @@ class StateMachine(enum.Enum):
 	S_ROBOT_MOVE_TOKEN_BACK = 9
 	S_ROBOT_MOVE_CORRECT_TOKEN = 10
 	S_ROBOT_OUTCOME = 11
+	S_USER_TIMEOUT = 12
 
 	CURRENT_STATE = 1
 
-	b_robot_assist_finished = False
-	b_robot_feedback_finished = False
-	b_user_picked_token = False
-	b_user_placed_token_back = False
-	b_user_placed_token_sol = False
-	b_robot_outcome_finised = False
-	b_robot_moved_token_back = False
-	b_user_moved_token_back = False
-	b_robot_moved_correct_token = False
-	b_user_reached_max_attempt = False
+
 
 	def robot_provide_assistance(self, game):
 		'''
 		Robot action of assistance combining speech and gesture
 		:return: True when the action has been completed
 		'''
-		print("R_ASSISTANCE")
-		game.move_info['robot_assistance'] = random.randint(0,4)
-		rospy.sleep(2.0)
-		self.b_robot_assist_finished = True
-		self.CURRENT_STATE = self.S_USER_ACTION
+		if self.b_user_reached_timeout==True:
+			print("R_REENGAGE")
+			self.robot_reengage_user()
+		else:
+			print("R_ASSISTANCE")
+			game.robot_assistance = random.randint(0,4)
+			rospy.sleep(2.0)
+			self.b_robot_assist_finished = True
+			self.CURRENT_STATE = self.S_USER_ACTION
 		return  self.b_robot_assist_finished
 
 	def robot_provide_feedback(self):
@@ -166,6 +188,12 @@ class StateMachine(enum.Enum):
 		self.b_robot_feedback_finished = True
 		self.CURRENT_STATE = self.S_USER_PLACE
 		return self.b_robot_feedback_finished
+
+	def robot_reengage_user(self):
+		'''As the timeout occurred the robot reengages the user'''
+		print("RE_ENGAGE USER")
+		self.CURRENT_STATE = self.S_USER_ACTION
+		self.b_robot_reengaged_user = True
 
 	def robot_provide_outcome(self, game):
 		'''
@@ -193,6 +221,7 @@ class StateMachine(enum.Enum):
 			game.set_attempt_per_token(game.n_attempt_per_token)
 			game.set_n_mistakes(game.n_mistakes)
 			self.CURRENT_STATE = self.S_ROBOT_ASSIST
+
 			# check if the user reached his max number of attempts
 			if game.n_attempt_per_token >= game.n_max_attempt:
 				self.S_ROBOT_MOVE_CORRECT_TOKEN = True
@@ -209,6 +238,7 @@ class StateMachine(enum.Enum):
 			game.set_n_mistakes(game.n_mistakes)
 			self.CURRENT_STATE = self.S_ROBOT_MOVE_TOKEN_BACK
 			self.user_move_back(game)
+
 			#check if the user reached his max number of attempts
 			if game.n_attempt_per_token>=game.n_max_attempt_per_token:
 				self.S_ROBOT_MOVE_CORRECT_TOKEN = True
@@ -249,23 +279,51 @@ class StateMachine(enum.Enum):
 		return self.b_user_moved_token_back
 
 	def user_action(self, game):
-		''' Dispach user action'''
-		'''We wait until the user pick a token'''
+		'''user action state has been divided in three sub methods:
+		 1. user pick a token
+		 2. robot provides feedback
+		 3. user place a token
+		  '''
 		print("U_ACTION")
+
+		def check_move_timeout(game):
+			'''we need to check if the computed time (react+elapsed) is smaller than timeout
+			if not, we need to trigger different actions:
+			1. if the user has not picked a token (re-engage)
+			2. if the user has picked a token, ask her to move it back
+			'''
+			current_time = time.time()
+			elapsed_time = current_time-game.react_time_per_token_spec_t0
+			if elapsed_time<game.timeout:
+				return True
+			else:
+				return False
+
+		def placed_back_token(sm):
+			'''As timeout occuccedd when the user has the token in his hand, we
+			 ask him to move it back'''
+			pass
+
+
 		def user_pick_token(sm, game):
-			game.react_time_per_token_t0 = time.time()
+			game.react_time_per_token_spec_t0 = time.time()
 			print("U_PICK")
 			sm.CURRENT_STATE = sm.S_ROBOT_FEEDBACK
 			detected_token, picked, _, _ = game.get_move_event()
 			while(not picked):
-				detected_token, picked, _, _ = game.get_move_event()
-			game.elapsed_time_per_token_t0 = time.time()
-			game.react_time_per_token_t1 = time.time()-game.react_time_per_token_t0
-			game.move_info['react_time'] = game.react_time_per_token_t1
-			game.move_info['token_id'], game.move_info['from'] = game.detected_token[0], game.detected_token[1]
-			sm.user_picked_token = True
-			user_picked = detected_token
-			return sm.user_picked_token
+				if check_move_timeout(game):
+					detected_token, picked, _, _ = game.get_move_event()
+				else:
+					sm.b_user_reached_timeout = True
+					game.react_time_per_token_spec_t0 = time.time()
+					return False
+
+			game.elapsed_time_per_token_spec_t0 = time.time()
+			game.react_time_per_token_spec_t1 = time.time()-game.react_time_per_token_spec_t0
+			game.react_time_per_token_gen_t1 += game.react_time_per_token_spec_t1
+			sm.b_user_picked_token = True
+			return sm.b_user_picked_token
+
 		def robot_provide_feedback(sm):
 			print("R_FEEDBACK")
 			sm.CURRENT_STATE = sm.S_USER_PLACE
@@ -274,28 +332,30 @@ class StateMachine(enum.Enum):
 		''' When the user picked the token we check where they place it'''
 		'''either they can place it back '''
 		def user_place(sm, game):
+			'''user place has been divided into:
+			   1. user places a token back
+			   2. user places a token in a solution row
+			'''
 			print("U_PLACE")
 			#check where the user will place the token
 			def user_place_token_back(sm):
 				print("U_PLACE_BACK")
 				sm.CURRENT_STATE = sm.S_USER_ACTION
 				sm.b_user_placed_token_back = True
-				game.elapsed_time_per_token_t1 = time.time()-game.elapsed_time_per_token_t0
-				game.move_info['to'] = game.detected_token[2]
-				game.move_info['elapsed_time'] = game.elapsed_time_per_token_t1
+				game.elapsed_time_per_token_spec_t1 = time.time()-game.elapsed_time_per_token_spec_t0
+				game.elapsed_time_per_token_gen_t1 += game.elapsed_time_per_token_spec_t1
 				return sm.b_user_placed_token_back
 			'''or they can place it in the solution row'''
 			def user_place_token_sol(sm):
 				print("U_PLACE_SOL")
 				sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
 				sm.b_user_placed_token_sol = True
-				game.elapsed_time_per_token_t1 = time.time() - game.elapsed_time_per_token_t0
-				game.move_info['to'] = game.detected_token[2]
-				game.move_info['elapsed_time'] = game.elapsed_time_per_token_t1
+				game.elapsed_time_per_token_spec_t1 = time.time() - game.elapsed_time_per_token_spec_t0
+				game.elapsed_time_per_token_gen_t1 += game.elapsed_time_per_token_spec_t1
 				return sm.b_user_placed_token_sol
 			'''return where the user placed the token'''
-			#here we get the token that has been placed and trigger one or the other action
 
+			#here we check whether a token has been picked, and where it has been placed
 			detected_token, picked, placed, moved_back = game.get_move_event()
 			while (not placed):
 				detected_token, _, placed, moved_back = game.get_move_event()
@@ -316,17 +376,18 @@ class StateMachine(enum.Enum):
 			else:
 				self.CURRENT_STATE = self.S_USER_PICK_TOKEN
 		else:
-			self.CURRENT_STATE = self.S_USER_ACTION
+			self.CURRENT_STATE = self.S_ROBOT_ASSIST
 
 	def num_to_func_to_str(self, argument):
 		switcher = {
 		        0: self.robot_provide_assistance,
-		        1: self.robot_provide_feedback,
-		        2: self.user_action,
-			    3: self.robot_provide_outcome,
-				4: self.robot_move_back,
-				5: self.user_move_back,
-				6: self.robot_move_correct_token
+				1: self.robot_reengage_user,
+		        2: self.robot_provide_feedback,
+		        3: self.user_action,
+			    4: self.robot_provide_outcome,
+				5: self.robot_move_back,
+				6: self.user_move_back,
+				7: self.robot_move_correct_token
 		    }
 
 		# get the function based on argument
@@ -339,35 +400,93 @@ class StateMachine(enum.Enum):
 
 
 def main():
+	game = Game(task_length=5, n_max_attempt_per_token=4, timeout=15)
+	input = raw_input("please, insert the id of the user")
+	path_name = os.getcwd() + "/log/" + input
+	if not os.path.exists(path_name):
+		os.makedirs(path_name)
+	else:
+		input = raw_input("The folder already exists, please remove it or create a new one")
+		path_name = os.getcwd() + "/log/" + input
+		if not os.path.exists(path_name):
+			os.makedirs(path_name)
 
+	file_spec = path_name + "/log_spec.txt"
 
-	game = Game()
-	game.set_n_solution(5)
-	game.set_n_max_attempt_per_token(4)
-	current_board = game.get_board_event()
-	#game.solution = game.set_objective(n_solution)
+	file_gen = path_name + "/log_gen.txt"
+
+	log_spec = Log(file_spec)
+	game.move_info_spec['token_id'] = "token_id"
+	game.move_info_spec['from'] = "from"
+	game.move_info_spec['to'] = "to"
+	game.move_info_spec['robot_assistance'] = "robot_assistance"
+	game.move_info_spec['react_time'] = "react_time"
+	game.move_info_spec['elapsed_time'] = "elapsed_time"
+	game.move_info_spec['attempt'] = "attempt"
+	game.move_info_spec_vect.append(game.move_info_spec)
+	log_spec.add_row_entry(game.move_info_spec)
+
+	log_gen = Log(file_gen)
+	game.move_info_gen['token_id'] = "token_id"
+	game.move_info_gen['from'] = "from"
+	game.move_info_gen['to'] = "to"
+	game.move_info_gen['avg_robot_assistance_per_move'] = "avg_assistance_per_move"
+	game.move_info_gen['cum_react_time'] = "cum_react_time"
+	game.move_info_gen['cum_elapsed_time'] = "cum_elapsed_time"
+	game.move_info_gen['attempt'] = "attempt"
+	game.move_info_gen_vect.append(game.move_info_gen)
+	log_gen.add_row_entry(game.move_info_gen)
+
 	sm = StateMachine(1)
 
-	while game.get_n_correct_move()<game.n_solution:
+	while game.get_n_correct_move()<game.task_length:
 		if sm.CURRENT_STATE.value == sm.S_ROBOT_ASSIST.value:
 			sm.robot_provide_assistance(game)
+			game.avg_robot_assistance_per_move += game.robot_assistance
 		elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
 			time_to_act = time.time()
 			sm.user_action(game)
-			game.total_elapsed_time += time.time()-time_to_act
+			if  game.detected_token:
+				game.move_info_spec['token_id'] = game.detected_token[0]
+				game.move_info_spec['from'] = game.detected_token[1]
+				game.move_info_spec['to'] = game.detected_token[2]
+				game.move_info_spec['robot_assistance'] = game.robot_assistance
+				game.move_info_spec['react_time'] = round(game.react_time_per_token_spec_t1, 2)
+				game.move_info_spec['elapsed_time'] = round(game.elapsed_time_per_token_spec_t1)
+				game.move_info_spec['attempt'] = game.n_attempt_per_token
+				game.total_elapsed_time += time.time()-time_to_act
+				game.move_info_spec_vect.append(game.move_info_spec)
+				log_spec.add_row_entry(game.move_info_spec)
+
 		elif sm.CURRENT_STATE.value == sm.S_ROBOT_OUTCOME.value:
 			sm.robot_provide_outcome(game)
+			#{'token_id':'', 'from':'', 'to':'', 'robot_assistance':'', 'react_time':'', 'elapsed_time':'', 'attempt':''}
+			game.move_info_gen['token_id'] = game.detected_token[0]
+			game.move_info_gen['from'] = game.detected_token[1]
+			game.move_info_gen['to'] = game.detected_token[2]
+			game.move_info_gen['avg_robot_assistance_per_move'] = game.avg_robot_assistance_per_move/game.n_attempt_per_token
+			game.move_info_gen['cum_react_time'] = game.react_time_per_token_gen_t1
+			game.move_info_gen['cum_elapsed_time'] = game.elapsed_time_per_token_gen_t1
+			game.move_info_gen['attempt'] = game.n_attempt_per_token
+			game.move_info_gen_vect.append(game.move_info_gen)
+			log_gen.add_row_entry(game.move_info_gen)
+			game.react_time_per_token_spec_t1 = 0
+			game.react_time_per_token_gen_t1 = 0
+			game.react_time_per_token_spec_t0 = 0
+			game.react_time_per_token_gen_t0 = 0
+			game.elapsed_time_per_token_spec_t1 = 0
+			game.elapsed_time_per_token_gen_t1 = 0
+			game.elapsed_time_per_token_spec_t0 = 0
+			game.elapsed_time_per_token_gen_t0 = 0
+			game.avg_robot_assistance_per_move = 0
 
-			print("game_state:", game.get_n_correct_move(), "n_attempt_token:", game.get_n_attempt_per_token())
-			print("react time: ", game.react_time_per_token_t1, "elapsed time: ", game.elapsed_time_per_token_t1)
-			game.move_info_vect.append(game.move_info.copy())
-			print(game.move_info)
+	for instance_spec in game.move_info_spec_vect:
+		print(instance_spec)
 
-	print("correct_move ", game.get_n_correct_move,
-	      " n_mistakes ", game.n_mistakes)
-	for instance in game.move_info_vect:
-		print(instance)
+	for instance_gen in game.move_info_gen_vect:
+		print(instance_gen)
 
+	print(game.total_elapsed_time)
 
 
 if __name__ == '__main__':
