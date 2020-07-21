@@ -38,8 +38,10 @@ class Game(object):
 		self.timeout = timeout
 		self.robot_assistance = 0
 		self.avg_robot_assistance_per_move = 0
+		self.outcome = 0
 		#counters
 		self.n_attempt_per_token = 1
+		self.n_attempt_per_feedback = 0
 		self.n_mistakes = 0
 		self.n_correct_move = 0
 		#subscriber variables from detect_move
@@ -60,8 +62,10 @@ class Game(object):
 		self.move_info_gen = {'token_id':'', 'from':'', 'to':'', 'avg_robot_assistance_per_move':'', 'cum_react_time':'', 'cum_elapsed_time':'', 'attempt':''}
 		self.move_info_spec = {'token_id': '', 'from': '', 'to': '', 'robot_assistance': '', 'react_time': '',
 		                      'elapsed_time': '', 'attempt': ''}
+		self.move_info_summary ={'attempt':'', 'avg_lev_assistance':'', 'react_time':'', 'elapsed_time':''}
 		self.move_info_gen_vect = list()
 		self.move_info_spec_vect = list()
+		self.move_info_summary_vect = list()
 
 	def get_board_event_callback(self, msg):
 		'''callback from the topic board_status to get the status of the current_board'''
@@ -129,6 +133,12 @@ class Game(object):
 	def set_n_max_attempt_per_token(self, value):
 		self.n_max_attempt_per_token = value
 
+	def add_info_gen_vect(self, dict):
+		self.move_info_gen_vect.append(dict.copy())
+
+	def add_info_spec_vect(self, dict):
+		self.move_info_spec_vect.append(dict.copy())
+
 
 class StateMachine(enum.Enum):
 
@@ -174,7 +184,7 @@ class StateMachine(enum.Enum):
 		else:
 			print("R_ASSISTANCE")
 			game.robot_assistance = random.randint(0,4)
-			rospy.sleep(2.0)
+			rospy.sleep(1.0)
 			self.b_robot_assist_finished = True
 			self.CURRENT_STATE = self.S_USER_ACTION
 		return  self.b_robot_assist_finished
@@ -203,10 +213,13 @@ class StateMachine(enum.Enum):
 		'''
 		print("R_OUTCOME")
 		outcome = 0
+		attempt = 0
 		#get current move and check if it is the one expeceted in the solution list
 		if game.detected_token[0] == game.solution[game.n_correct_move]  \
 			and game.detected_token[2] == str(game.solution.index(game.detected_token[0])+1):
-			outcome = 1
+			#get the values from attempt and mistakes before resetting them
+			attempt = game.n_attempt_per_token
+			game.outcome = 1
 			game.n_correct_move += 1
 			game.n_attempt_per_token = 1
 			game.set_n_correct_move(game.n_correct_move)
@@ -214,12 +227,14 @@ class StateMachine(enum.Enum):
 			print("correct_solution ", game.get_n_correct_move())
 			self.CURRENT_STATE = self.S_ROBOT_ASSIST
 		elif game.detected_token[0] == []:
-			outcome = 0
+			game.outcome = 0
 			print("timeout")
+			attempt = game.n_attempt_per_token
 			game.n_mistakes += 1
 			game.n_attempt_per_token += 1
 			game.set_attempt_per_token(game.n_attempt_per_token)
 			game.set_n_mistakes(game.n_mistakes)
+			attempt = game.n_attempt_per_token
 			self.CURRENT_STATE = self.S_ROBOT_ASSIST
 
 			# check if the user reached his max number of attempts
@@ -230,12 +245,13 @@ class StateMachine(enum.Enum):
 
 		elif game.detected_token[0] != game.solution[game.n_correct_move]  \
 			or game.detected_token[2] != game.solution.index(game.detected_token[0])+1:
-			outcome = -1
+			game.outcome = -1
 			print("wrong_solution")
 			game.n_mistakes += 1
 			game.n_attempt_per_token += 1
 			game.set_n_attempt_per_token(game.n_attempt_per_token)
 			game.set_n_mistakes(game.n_mistakes)
+			attempt = game.n_attempt_per_token
 			self.CURRENT_STATE = self.S_ROBOT_MOVE_TOKEN_BACK
 			self.user_move_back(game)
 
@@ -246,7 +262,7 @@ class StateMachine(enum.Enum):
 				self.robot_move_correct_token(game)
 
 		self.b_robot_outcome_finished = True
-		return self.b_robot_outcome_finished, outcome
+		return self.b_robot_outcome_finished, attempt
 
 	def robot_move_back(self):
 		#user moved the token in an incorrect location
@@ -344,6 +360,10 @@ class StateMachine(enum.Enum):
 				sm.b_user_placed_token_back = True
 				game.elapsed_time_per_token_spec_t1 = time.time()-game.elapsed_time_per_token_spec_t0
 				game.elapsed_time_per_token_gen_t1 += game.elapsed_time_per_token_spec_t1
+				game.n_mistakes += 1
+				game.n_attempt_per_feedback += 1
+				game.set_n_attempt_per_token(game.n_attempt_per_token)
+				game.set_n_mistakes(game.n_mistakes)
 				return sm.b_user_placed_token_back
 			'''or they can place it in the solution row'''
 			def user_place_token_sol(sm):
@@ -401,19 +421,23 @@ class StateMachine(enum.Enum):
 
 def main():
 	game = Game(task_length=5, n_max_attempt_per_token=4, timeout=15)
-	input = raw_input("please, insert the id of the user")
-	path_name = os.getcwd() + "/log/" + input
+	input = raw_input("please, insert the id of the user:")
+	path = os.path.abspath(__file__)
+	dir_path = os.path.dirname(path)
+	parent_dir_of_file = os.path.dirname(dir_path)
+	path_name = parent_dir_of_file + "/log/" + input
+	print(path_name)
 	if not os.path.exists(path_name):
 		os.makedirs(path_name)
 	else:
-		input = raw_input("The folder already exists, please remove it or create a new one")
+		input = raw_input("The folder already exists, please remove it or create a new one:")
 		path_name = os.getcwd() + "/log/" + input
 		if not os.path.exists(path_name):
 			os.makedirs(path_name)
 
 	file_spec = path_name + "/log_spec.txt"
-
 	file_gen = path_name + "/log_gen.txt"
+	file_summary = path_name + "/log_summary.txt"
 
 	log_spec = Log(file_spec)
 	game.move_info_spec['token_id'] = "token_id"
@@ -437,6 +461,12 @@ def main():
 	game.move_info_gen_vect.append(game.move_info_gen)
 	log_gen.add_row_entry(game.move_info_gen)
 
+	log_summary = Log(file_summary)
+	game.move_info_summary["attempt"] = "n_attempt"
+	game.move_info_summary["avg_lev_assistance"] = "lev_assistance"
+	game.move_info_summary["react_time"] = "react_time"
+	game.move_info_summary["elapsed_time"] = "elapsed_time"
+	log_summary.add_row_entry(game.move_info_summary)
 	sm = StateMachine(1)
 
 	while game.get_n_correct_move()<game.task_length:
@@ -444,41 +474,58 @@ def main():
 			sm.robot_provide_assistance(game)
 			game.avg_robot_assistance_per_move += game.robot_assistance
 		elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
+			print("Expected token ", game.solution[game.get_n_correct_move()])
 			time_to_act = time.time()
 			sm.user_action(game)
 			if  game.detected_token:
+				print("Moved token ", game.detected_token[0])
 				game.move_info_spec['token_id'] = game.detected_token[0]
 				game.move_info_spec['from'] = game.detected_token[1]
 				game.move_info_spec['to'] = game.detected_token[2]
 				game.move_info_spec['robot_assistance'] = game.robot_assistance
-				game.move_info_spec['react_time'] = round(game.react_time_per_token_spec_t1, 2)
-				game.move_info_spec['elapsed_time'] = round(game.elapsed_time_per_token_spec_t1)
+				game.move_info_spec['react_time'] = round(game.react_time_per_token_spec_t1, 3)
+				game.move_info_spec['elapsed_time'] = round(game.elapsed_time_per_token_spec_t1, 3)
 				game.move_info_spec['attempt'] = game.n_attempt_per_token
 				game.total_elapsed_time += time.time()-time_to_act
-				game.move_info_spec_vect.append(game.move_info_spec)
+				game.add_info_spec_vect(game.move_info_spec)
 				log_spec.add_row_entry(game.move_info_spec)
 
 		elif sm.CURRENT_STATE.value == sm.S_ROBOT_OUTCOME.value:
-			sm.robot_provide_outcome(game)
+			#these are reported only because the variables are already reset when a correct move occurred
+			done, attempt = sm.robot_provide_outcome(game)
 			#{'token_id':'', 'from':'', 'to':'', 'robot_assistance':'', 'react_time':'', 'elapsed_time':'', 'attempt':''}
-			game.move_info_gen['token_id'] = game.detected_token[0]
-			game.move_info_gen['from'] = game.detected_token[1]
-			game.move_info_gen['to'] = game.detected_token[2]
-			game.move_info_gen['avg_robot_assistance_per_move'] = game.avg_robot_assistance_per_move/game.n_attempt_per_token
-			game.move_info_gen['cum_react_time'] = game.react_time_per_token_gen_t1
-			game.move_info_gen['cum_elapsed_time'] = game.elapsed_time_per_token_gen_t1
-			game.move_info_gen['attempt'] = game.n_attempt_per_token
-			game.move_info_gen_vect.append(game.move_info_gen)
-			log_gen.add_row_entry(game.move_info_gen)
-			game.react_time_per_token_spec_t1 = 0
-			game.react_time_per_token_gen_t1 = 0
-			game.react_time_per_token_spec_t0 = 0
-			game.react_time_per_token_gen_t0 = 0
-			game.elapsed_time_per_token_spec_t1 = 0
-			game.elapsed_time_per_token_gen_t1 = 0
-			game.elapsed_time_per_token_spec_t0 = 0
-			game.elapsed_time_per_token_gen_t0 = 0
-			game.avg_robot_assistance_per_move = 0
+			if (game.outcome == 1 or (game.outcome==0 and game.n_attempt_per_token==game.n_max_attempt_per_token)
+					or (game.outcome==-1 and game.n_attempt_per_token==game.n_max_attempt_per_token)):
+				game.move_info_gen['token_id'] = game.detected_token[0]
+				game.move_info_gen['from'] = game.detected_token[1]
+				game.move_info_gen['to'] = game.detected_token[2]
+				game.move_info_gen['avg_robot_assistance_per_move'] = (game.avg_robot_assistance_per_move/attempt)
+				game.move_info_gen['cum_react_time'] = round(game.react_time_per_token_gen_t1, 3)
+				game.move_info_gen['cum_elapsed_time'] = round(game.elapsed_time_per_token_gen_t1, 3)
+				game.move_info_gen['attempt'] = attempt
+				game.add_info_gen_vect(game.move_info_gen)
+				log_gen.add_row_entry(game.move_info_gen)
+				game.react_time_per_token_spec_t1 = 0
+				game.react_time_per_token_gen_t1 = 0
+				game.react_time_per_token_spec_t0 = 0
+				game.react_time_per_token_gen_t0 = 0
+				game.elapsed_time_per_token_spec_t1 = 0
+				game.elapsed_time_per_token_gen_t1 = 0
+				game.elapsed_time_per_token_spec_t0 = 0
+				game.elapsed_time_per_token_gen_t0 = 0
+				game.avg_robot_assistance_per_move = 0
+
+	game.move_info_summary["attempt"] = "n_attempt"
+	game.move_info_summary["avg_lev_assistance"] = "lev_assistance"
+	game.move_info_summary["react_time"] = "react_time"
+	game.move_info_summary["elapsed_time"] = "elapsed_time"
+
+
+	game.move_info_summary["attempt"] = sum([elem['attempt'] for elem in game.move_info_gen_vect])
+	game.move_info_summary["avg_lev_assistance"] = sum([elem['avg_robot_assistance_per_move'] for elem in game.move_info_gen_vect])/game.task_length
+	game.move_info_summary["react_time"] = sum([elem['cum_react_time'] for elem in game.move_info_gen_vect])
+	game.move_info_summary["elapsed_time"] = sum([elem['cum_elapsed_time'] for elem in game.move_info_gen_vect])
+	log_summary.add_row_entry(game.move_info_summary)
 
 	for instance_spec in game.move_info_spec_vect:
 		print(instance_spec)
