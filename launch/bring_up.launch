@@ -8,9 +8,10 @@
       <param name="/user_id" value="$(arg user_id)" />
   <arg name="assistive_actions" default="$(find xml_reader)/src/xml_reader/assistive_actions_definition_es.xml" />
       <param name="/assistive_actions" value="$(arg assistive_actions)" />
-
   <arg name="objective" default="ascending" />
       <param name="/objective" value="$(arg objective)" /> 
+  <arg name="SOCIABLE" default="True" />
+      <param name="/SOCIABLE" value="$(arg SOCIABLE)" />
 
   <!-- Final tokens locations -->
   <rosparam param="solution_ascending">
