@@ -319,7 +319,7 @@ def main():
 		os.makedirs(path_name)
 	else:
 		user_id = raw_input("The folder already exists, please remove it or create a new one:")
-		path_name = os.getcwd() + "/log/" + user_id
+		path_name = parent_dir_of_file + "/log/" + user_id
 		if not os.path.exists(path_name):
 			os.makedirs(path_name)
 
