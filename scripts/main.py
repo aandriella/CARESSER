@@ -328,35 +328,23 @@ def main():
 	file_summary = path_name + "/log_summary.txt"
 
 	log_spec = Log(file_spec)
-	game.move_info_spec['token_id'] = "token_id"
-	game.move_info_spec['from'] = "from"
-	game.move_info_spec['to'] = "to"
-	game.move_info_spec['robot_assistance'] = "robot_assistance"
-	game.move_info_spec['react_time'] = "react_time"
-	game.move_info_spec['elapsed_time'] = "elapsed_time"
-	game.move_info_spec['attempt'] = "attempt"
-	game.move_info_spec['sociable'] = "sociable"
+	entry_log_spec = ['token_id', 'from', 'to',
+	                    'robot_assistance',"react_time",
+                        'elapsed_time',"attempt", "sociable"]
+	game.move_info_spec = {e:e for e in entry_log_spec}
 	game.move_info_spec_vect.append(game.move_info_spec)
 	log_spec.add_row_entry(game.move_info_spec)
 
 	log_gen = Log(file_gen)
-	game.move_info_gen['token_id'] = "token_id"
-	game.move_info_gen['from'] = "from"
-	game.move_info_gen['to'] = "to"
-	game.move_info_gen['avg_robot_assistance_per_move'] = "avg_assistance_per_move"
-	game.move_info_gen['cum_react_time'] = "cum_react_time"
-	game.move_info_gen['cum_elapsed_time'] = "cum_elapsed_time"
-	game.move_info_gen['attempt'] = "attempt"
-	game.move_info_gen['sociable'] = "sociable"
+	entry_log_gen = ["token_id", "from", "to", "avg_robot_assistance_per_move", "cum_react_time",
+	                 "cum_elapsed_time", "attempt", "sociable"]
+	game.move_info_gen = {e:e for e in entry_log_gen}
 	game.move_info_gen_vect.append(game.move_info_gen)
 	log_gen.add_row_entry(game.move_info_gen)
 
 	log_summary = Log(file_summary)
-	game.move_info_summary["attempt"] = "n_attempt"
-	game.move_info_summary["sociable"] = "n_sociable"
-	game.move_info_summary["avg_lev_assistance"] = "lev_assistance"
-	game.move_info_summary["react_time"] = "react_time"
-	game.move_info_summary["elapsed_time"] = "elapsed_time"
+	entry_log_summary = ["n_attempt", "n_sociable", "lev_assistance", "react_time", "elapsed_time"]
+	game.move_info_summary = {e:e for e in entry_log_summary}
 	log_summary.add_row_entry(game.move_info_summary)
 	sm = StateMachine(1)
 
@@ -381,14 +369,14 @@ def main():
 			#if you have done the correct move or you reach the maximum number of attempts then store the data
 			if (game.outcome == 1 or (game.outcome==0 and game.n_attempt_per_token==game.n_max_attempt_per_token)
 					or (game.outcome==-1 and game.n_attempt_per_token==game.n_max_attempt_per_token)):
-				log = game.store_info_gen()
-				log_gen.add_row_entry(log)
+				entry_log = game.store_info_gen()
+				log_gen.add_row_entry(entry_log)
 				game.reset_counters()
 			game.reset_detected_token()
 
 
-	log = game.store_info_summary()
-	log_summary.add_row_entry(log)
+	entry_log = game.store_info_summary()
+	log_summary.add_row_entry(entry_log)
 
 	for instance_spec in game.move_info_spec_vect:
 		print(instance_spec)
