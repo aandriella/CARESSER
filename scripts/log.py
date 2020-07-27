@@ -29,7 +29,7 @@ def main():
 
 
 	file = path_name+"/log.txt"
-	log = Log(file, **variables)
+	log = Log(file)
 
 	log.add_row_entry(**entries)
 
