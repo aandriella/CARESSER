@@ -44,10 +44,9 @@ class Game(object):
 		self.elapsed_time_per_token_gen_t1 = 0.0
 		self.elapsed_time_per_token_spec_t1 = 0.0
 		self.total_elapsed_time = 0.0
-		self.move_info_gen = {'token_id':'', 'from':'', 'to':'', 'avg_robot_assistance_per_move':'', 'cum_react_time':'', 'cum_elapsed_time':'', 'attempt':''}
-		self.move_info_spec = {'token_id': '', 'from': '', 'to': '', 'robot_assistance': '', 'react_time': '',
-		                      'elapsed_time': '', 'attempt': ''}
-		self.move_info_summary ={'attempt':'', 'avg_lev_assistance':'', 'react_time':'', 'elapsed_time':''}
+		self.move_info_gen = dict()
+		self.move_info_spec = dict()
+		self.move_info_summary = dict()
 		self.move_info_gen_vect = list()
 		self.move_info_spec_vect = list()
 		self.move_info_summary_vect = list()
