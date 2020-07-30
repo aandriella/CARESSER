@@ -62,7 +62,9 @@ class StateMachine(enum.Enum):
     '''
     if self.b_user_reached_timeout == True:
       print("R_REENGAGE")
-      success = robot.action["timeout"].__call__()
+      success = robot.action["timeout"].__call__(game.n_attempt_per_token-1)
+      self.CURRENT_STATE = self.S_ROBOT_ASSIST
+      self.b_user_reached_timeout = False
       self.b_robot_reengaged_user = True
     else:
       print("R_ASSISTANCE")
@@ -70,10 +72,11 @@ class StateMachine(enum.Enum):
       token_sol = game.get_token_sol()
       tokens_subset = game.get_subset(3)
       token_row = game.get_token_row()
-      game.robot_assistance = 2#random.randint(0, 5)
+      game.robot_assistance = random.randint(0, 5)
       success = robot.action["assistance"].__call__(game.robot_assistance, token_row, game.n_attempt_per_token-1, token_sol, tokens_subset)
 
       self.b_robot_assist_finished = True
+      self.b_robot_reengaged_user == False
       self.CURRENT_STATE = self.S_USER_ACTION
     return self.b_robot_assist_finished
 
@@ -141,14 +144,14 @@ class StateMachine(enum.Enum):
       game.outcome = -1
       print("wrong_solution")
       robot.action["compassion"].__call__(game.n_attempt_per_token-1)
-      self.robot_move_back(game, robot)
+      #self.robot_move_back(game, robot)
       game.n_mistakes += 1
       game.n_attempt_per_token += 1
       game.set_n_attempt_per_token(game.n_attempt_per_token)
       game.set_n_mistakes(game.n_mistakes)
       attempt = game.n_attempt_per_token
       self.CURRENT_STATE = self.S_ROBOT_MOVE_TOKEN_BACK
-      self.user_move_back(game)
+      self.user_move_back(game, robot)
 
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
@@ -185,7 +188,7 @@ class StateMachine(enum.Enum):
     # user moved the token in an incorrect location
     # robot moved it back
     print("User moved back the token")
-    success = robot.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1)
+    #success = robot.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1)
     # get the initial location of the placed token and move back there
     token, _to, _from = game.detected_token
     while (game.detected_token != [token, _from, _to]):
@@ -240,12 +243,14 @@ class StateMachine(enum.Enum):
       return sm.b_user_picked_token
 
     def robot_provide_feedback(sm, game, robot):
+      robot.cancel_action()
       print("R_FEEDBACK")
       game.n_sociable_per_token += 1
       game.n_tot_sociable += 1
       if game.detected_token[0] == game.solution[game.n_correct_move]:
         robot.action["pick"].__call__(positive=True, counter=game.n_attempt_per_token-1)
-      robot.action["pick"].__call__(positive=False, counter=game.n_attempt_per_token-1)
+      else:
+        robot.action["pick"].__call__(positive=False, counter=game.n_attempt_per_token-1)
       sm.CURRENT_STATE = sm.S_USER_PLACE
       sm.robot_provided_feeback_finished = True
       return sm.robot_provided_feeback_finished
@@ -289,10 +294,10 @@ class StateMachine(enum.Enum):
       while (not placed):
         detected_token, _, placed, moved_back = game.get_move_event()
       if (placed and moved_back):
-        self.CURRENT_STATE = sm.S_ROBOT_OUTCOME
+        sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
         return user_place_token_back(sm)
       elif (placed and not moved_back):
-        self.CURRENT_STATE = sm.S_ROBOT_OUTCOME
+        sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
         return user_place_token_sol(sm)
       else:
         assert "Unexpected state"
@@ -337,7 +342,7 @@ class StateMachine(enum.Enum):
 
 def main():
   # we create the game instance
-  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=15)
+  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=10)
   # we create the robot instance
   speech = Speech("en_GB")
   face = Face()
@@ -394,7 +399,7 @@ def main():
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
       print("Expected token ", game.solution[game.get_n_correct_move()])
       time_to_act = time.time()
-      game.with_SOCIABLE = random.randint(0,1)
+      #game.with_SOCIABLE = random.randint(0,1)
       sm.user_action(game, tiago_robot)
       game.total_elapsed_time += time.time() - time_to_act
 
