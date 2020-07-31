@@ -62,7 +62,7 @@ class StateMachine(enum.Enum):
     '''
     if self.b_user_reached_timeout == True:
       print("R_REENGAGE")
-      success = robot.action["timeout"].__call__(game.n_attempt_per_token-1)
+      success = robot.action["timeout"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
       self.b_user_reached_timeout = False
       self.b_robot_reengaged_user = True
@@ -73,7 +73,7 @@ class StateMachine(enum.Enum):
       tokens_subset = game.get_subset(3)
       token_row = game.get_token_row()
       game.robot_assistance = random.randint(0, 5)
-      success = robot.action["assistance"].__call__(game.robot_assistance, token_row, game.n_attempt_per_token-1, token_sol, tokens_subset)
+      success = robot.action["assistance"].__call__(lev_id=game.robot_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset)
 
       self.b_robot_assist_finished = True
       self.b_robot_reengaged_user == False
@@ -118,13 +118,13 @@ class StateMachine(enum.Enum):
     # get current move and check if it is the one expeceted in the solution list
     elif game.detected_token[0] == game.solution[game.n_correct_move] \
         and game.detected_token[2] == str(game.solution.index(game.detected_token[0]) + 1):
-      robot.action["congrats"].__call__(game.n_attempt_per_token-1)
+      robot.action["congrats"].__call__(counter=game.n_attempt_per_token-1, facial_expression="happy")
       game.outcome = 1
       print("correct_solution ", game.get_n_correct_move())
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
     elif game.detected_token[0] == []:
       print("timeout")
-      robot.action["timeout"].__call__(game.n_attempt_per_token-1)
+      robot.action["timeout"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
       game.outcome = 0
       game.n_mistakes += 1
       game.n_attempt_per_token += 1
@@ -143,7 +143,7 @@ class StateMachine(enum.Enum):
         or game.detected_token[2] != game.solution.index(game.detected_token[0]) + 1:
       game.outcome = -1
       print("wrong_solution")
-      robot.action["compassion"].__call__(game.n_attempt_per_token-1)
+      robot.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
       #self.robot_move_back(game, robot)
       game.n_mistakes += 1
       game.n_attempt_per_token += 1
@@ -167,7 +167,7 @@ class StateMachine(enum.Enum):
     print("Robot moves the correct token as the user reached the max number of attempts")
     # get the current solution
     token = game.get_token_sol()
-    success = robot.action["max_attempt"].__call__(token, game.n_attempt_per_token-1)
+    success = robot.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad")
     input = raw_input("move the token in the correct position and press a button")
     game.set_n_correct_move(game.get_n_correct_move() + 1)
     game.set_n_attempt_per_token(1)
@@ -179,7 +179,7 @@ class StateMachine(enum.Enum):
     # user moved the token in an incorrect location
     # robot moved it back
     print("Robot moved back the token")
-    success = robot.action["move_back"].__call__(who="robot", token=game.get_token_sol(), counter=game.n_attempt_per_token-1)
+    success = robot.action["move_back"].__call__(who="robot", token=game.get_token_sol(), counter=game.n_attempt_per_token-1, facial_expression="neutral")
     self.CURRENT_STATE = self.S_ROBOT_ASSIST
     self.b_robot_moved_token_back = True
     return self.b_robot_moved_token_back
@@ -248,9 +248,9 @@ class StateMachine(enum.Enum):
       game.n_sociable_per_token += 1
       game.n_tot_sociable += 1
       if game.detected_token[0] == game.solution[game.n_correct_move]:
-        robot.action["pick"].__call__(positive=True, counter=game.n_attempt_per_token-1)
+        robot.action["pick"].__call__(positive=True, counter=game.n_attempt_per_token-1, facial_expression="happy")
       else:
-        robot.action["pick"].__call__(positive=False, counter=game.n_attempt_per_token-1)
+        robot.action["pick"].__call__(positive=False, counter=game.n_attempt_per_token-1, facial_expression="confused")
       sm.CURRENT_STATE = sm.S_USER_PLACE
       sm.robot_provided_feeback_finished = True
       return sm.robot_provided_feeback_finished
