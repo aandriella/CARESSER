@@ -383,7 +383,7 @@ def main():
   log_gen.add_row_entry(game.move_info_gen)
 
   log_summary = Log(file_summary)
-  entry_log_summary = ["n_attempt", "n_sociable", "lev_assistance", "react_time", "elapsed_time"]
+  entry_log_summary = ["n_attempt", "n_sociable", "avg_lev_assistance", "tot_react_time", "tot_elapsed_time"]
   game.move_info_summary = {e: e for e in entry_log_summary}
   log_summary.add_row_entry(game.move_info_summary)
   sm = StateMachine(1)
