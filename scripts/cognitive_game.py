@@ -193,16 +193,14 @@ class Game(object):
     return self.move_info_gen
 
   def store_info_summary(self):
-    self.move_info_summary["attempt"] = "n_attempt"
-    self.move_info_summary["avg_lev_assistance"] = "lev_assistance"
-    self.move_info_summary["react_time"] = "react_time"
-    self.move_info_summary["elapsed_time"] = "elapsed_time"
-    self.move_info_summary["attempt"] = sum([elem['attempt'] for elem in self.move_info_gen_vect])
-    self.move_info_summary["sociable"] = sum([elem['sociable'] for elem in self.move_info_gen_vect])
+    entry_log_summary = ["n_attempt", "n_sociable", "avg_lev_assistance", "tot_react_time", "tot_elapsed_time"]
+
+    self.move_info_summary["n_attempt"] = sum([elem['attempt'] for elem in self.move_info_gen_vect])
+    self.move_info_summary["n_sociable"] = sum([elem['sociable'] for elem in self.move_info_gen_vect])
     self.move_info_summary["avg_lev_assistance"] = sum(
       [elem['avg_robot_assistance_per_move'] for elem in self.move_info_gen_vect]) / self.task_length
-    self.move_info_summary["react_time"] = sum([elem['cum_react_time'] for elem in self.move_info_gen_vect])
-    self.move_info_summary["elapsed_time"] = sum([elem['cum_elapsed_time'] for elem in self.move_info_gen_vect])
+    self.move_info_summary["tot_react_time"] = sum([elem['cum_react_time'] for elem in self.move_info_gen_vect])
+    self.move_info_summary["tot_elapsed_time"] = sum([elem['cum_elapsed_time'] for elem in self.move_info_gen_vect])
     return self.move_info_summary
 
   def reset_counters(self):
