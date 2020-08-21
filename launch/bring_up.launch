@@ -1,17 +1,16 @@
 <launch>
   <node pkg="carf" type="main.py" name="carf" output="screen"/>
   
-
   <arg name="language" default="es_ES"/>
       <param name="/language" value="$(arg language)" />
+  <arg name="config_path" default="$(find robot_behaviour)/src/robot_behaviour/config/sentences"/>
+      <param name="/config_path" value="$(arg config_path)" />
   <arg name="user_id" default="0000" />
       <param name="/user_id" value="$(arg user_id)" />
-  <arg name="assistive_actions" default="$(find xml_reader)/src/xml_reader/assistive_actions_definition_es.xml" />
-      <param name="/assistive_actions" value="$(arg assistive_actions)" />
-  <arg name="objective" default="ascending" />
+   <arg name="objective" default="ascending" />
       <param name="/objective" value="$(arg objective)" /> 
-  <arg name="SOCIABLE" default="True" />
-      <param name="/SOCIABLE" value="$(arg SOCIABLE)" />
+  <arg name="sociable" default="True" />
+      <param name="/sociable" value="$(arg sociable)" />
 
   <!-- Final tokens locations -->
   <rosparam param="solution_ascending">
@@ -25,6 +24,8 @@
 <rosparam param="rfid_id">
    3581181951 3306978559 894864895 2247134207 1439793151 3315042303 1972340735 2768466943 2509992703 2777051135 4117136895 3852242175 88436991 2504166399 356806911
 </rosparam>
+
+<!--Here are all the robot movements needed -->
 
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/p11.yaml" />
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/p12.yaml" />
