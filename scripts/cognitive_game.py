@@ -4,14 +4,14 @@ from board_state.msg import BoardMsg
 
 
 class Game(object):
-  def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout):
+  def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective, with_SOCIABLE):
     rospy.init_node('big_hero', anonymous=True)
     # subscriber for getting info from the board
     rospy.Subscriber("/detected_move", TokenMsg, self.get_move_event_callback)
     rospy.Subscriber("/board_status", BoardMsg, self.get_board_event_callback)
     #get the objective of the exercise from the launch file
-    self.objective = rospy.get_param("/objective")
-    self.with_SOCIABLE = rospy.get_param("/SOCIABLE")
+    self.objective = objective
+    self.with_SOCIABLE = with_SOCIABLE
     #we need a sleep in order to give the system the time to get the board info
     self.current_board = []
     rospy.sleep(2)
