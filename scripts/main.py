@@ -341,19 +341,33 @@ class StateMachine(enum.Enum):
 
 
 def main():
+  language = rospy.get_param("/language")
+  config_path = rospy.get_param("/config_path")
+  sentences_file = ""
+  if language == "en_GB":
+    sentences_file = config_path+"/sentences_"+language
+  elif language == "es":
+    sentences_file =  config_path+"/sentences_"+language
+  elif language == "cat":
+    sentences_file =  config_path+"/sentences_"+language
+  user_id = rospy.get_param("/user_id")
+  with_SOCIABLE = rospy.get_param("/sociable")
+  objective = rospy.get_param("/objective")
+
+
   # we create the game instance
-  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=10)
+  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=10, objective=objective, with_SOCIABLE=with_SOCIABLE)
   # we create the robot instance
-  speech = Speech("en_GB")
+  speech = Speech(language)
   face = Face()
   gesture = None
-  tiago_robot = Robot(speech, face, gesture)
+  tiago_robot = Robot(speech, sentences_file, face, gesture)
 
-  user_id = raw_input("please, insert the id of the user:")
+  #user_id = raw_input("please, insert the id of the user:")
   path = os.path.abspath(__file__)
   dir_path = os.path.dirname(path)
   parent_dir_of_file = os.path.dirname(dir_path)
-  path_name = parent_dir_of_file + "/log/" + user_id
+  path_name = parent_dir_of_file + "/log/" + str(user_id)
 
   if not os.path.exists(path_name):
     os.makedirs(path_name)
@@ -362,6 +376,7 @@ def main():
     path_name = parent_dir_of_file + "/log/" + user_id
     if not os.path.exists(path_name):
       os.makedirs(path_name)
+
 
   file_spec = path_name + "/log_spec.txt"
   file_gen = path_name + "/log_gen.txt"
