@@ -167,16 +167,28 @@ class Game(object):
   def add_info_spec_vect(self, dict):
     self.move_info_spec_vect.append(dict.copy())
 
-  def store_info_spec(self):
-    self.move_info_spec['token_id'] = self.detected_token[0]
-    self.move_info_spec['from'] = self.detected_token[1]
-    self.move_info_spec['to'] = self.detected_token[2]
-    self.move_info_spec['robot_assistance'] = self.robot_assistance
-    self.move_info_spec['react_time'] = round(self.react_time_per_token_spec_t1, 3)
-    self.move_info_spec['elapsed_time'] = round(self.elapsed_time_per_token_spec_t1, 3)
-    self.move_info_spec['attempt'] = self.n_attempt_per_token
-    self.move_info_spec['sociable'] = self.n_sociable_per_token
-    self.add_info_spec_vect(self.move_info_spec)
+  def store_info_spec(self, outcome):
+    #timeout
+    if outcome==0:
+      self.move_info_spec['token_id'] = ""
+      self.move_info_spec['from'] = ""
+      self.move_info_spec['to'] = ""
+      self.move_info_spec['robot_assistance'] = self.robot_assistance
+      self.move_info_spec['react_time'] = self.timeout
+      self.move_info_spec['elapsed_time'] = 0
+      self.move_info_spec['attempt'] = self.n_attempt_per_token
+      self.move_info_spec['sociable'] = self.n_sociable_per_token
+      self.add_info_spec_vect(self.move_info_spec)
+    else:
+      self.move_info_spec['token_id'] = self.detected_token[0]
+      self.move_info_spec['from'] = self.detected_token[1]
+      self.move_info_spec['to'] = self.detected_token[2]
+      self.move_info_spec['robot_assistance'] = self.robot_assistance
+      self.move_info_spec['react_time'] = round(self.react_time_per_token_spec_t1, 3)
+      self.move_info_spec['elapsed_time'] = round(self.elapsed_time_per_token_spec_t1, 3)
+      self.move_info_spec['attempt'] = self.n_attempt_per_token
+      self.move_info_spec['sociable'] = self.n_sociable_per_token
+      self.add_info_spec_vect(self.move_info_spec)
     return self.move_info_spec
 
   def store_info_gen(self):
