@@ -27,6 +27,7 @@ class Game(object):
     self.height = board_size[1]
     #counters
     self.n_attempt_per_token = 1
+    self.n_timeout_per_token = 0
     self.n_tot_sociable = 0
     self.n_sociable_per_token = 0
     self.n_mistakes = 0
@@ -178,6 +179,7 @@ class Game(object):
       self.move_info_spec['elapsed_time'] = 0
       self.move_info_spec['attempt'] = self.n_attempt_per_token
       self.move_info_spec['sociable'] = self.n_sociable_per_token
+      self.move_info_spec['timeout'] = self.n_timeout_per_token
       self.add_info_spec_vect(self.move_info_spec)
     else:
       self.move_info_spec['token_id'] = self.detected_token[0]
@@ -188,6 +190,7 @@ class Game(object):
       self.move_info_spec['elapsed_time'] = round(self.elapsed_time_per_token_spec_t1, 3)
       self.move_info_spec['attempt'] = self.n_attempt_per_token
       self.move_info_spec['sociable'] = self.n_sociable_per_token
+      self.move_info_spec['timeout'] = self.n_timeout_per_token
       self.add_info_spec_vect(self.move_info_spec)
     return self.move_info_spec
 
@@ -200,6 +203,7 @@ class Game(object):
     self.move_info_gen['cum_react_time'] = round(self.react_time_per_token_gen_t1, 3)
     self.move_info_gen['cum_elapsed_time'] = round(self.elapsed_time_per_token_gen_t1, 3)
     self.move_info_gen['attempt'] = self.n_attempt_per_token
+    self.move_info_gen['timeout'] = self.n_timeout_per_token
     self.move_info_gen['sociable'] = self.n_sociable_per_token
     self.add_info_gen_vect(self.move_info_gen)
     return self.move_info_gen
@@ -208,6 +212,7 @@ class Game(object):
     entry_log_summary = ["n_attempt", "n_sociable", "avg_lev_assistance", "tot_react_time", "tot_elapsed_time"]
 
     self.move_info_summary["n_attempt"] = sum([elem['attempt'] for elem in self.move_info_gen_vect])
+    self.move_info_summary["n_timeout"] = sum([elem['timeout'] for elem in self.move_info_gen_vect])
     self.move_info_summary["n_sociable"] = sum([elem['sociable'] for elem in self.move_info_gen_vect])
     self.move_info_summary["avg_lev_assistance"] = sum(
       [elem['avg_robot_assistance_per_move'] for elem in self.move_info_gen_vect]) / self.task_length
@@ -225,11 +230,7 @@ class Game(object):
     self.elapsed_time_per_token_spec_t0 = 0
     self.elapsed_time_per_token_gen_t0 = 0
     self.avg_robot_assistance_per_move = 0
-    self.n_sociable_per_token = 0
-    self.n_correct_move += 1
-    self.n_attempt_per_token = 1
-    self.set_n_correct_move(self.n_correct_move)
-    self.set_n_attempt_per_token(self.n_attempt_per_token)
+
 
   def reset_detected_token(self):
     self.detected_token = []
