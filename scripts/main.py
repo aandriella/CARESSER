@@ -90,6 +90,66 @@ class StateMachine(enum.Enum):
   #   self.CURRENT_STATE = self.S_USER_ACTION
   #   self.b_robot_reengaged_user = True
 
+  def update_counters(self, game):
+    '''
+        Auxiliary function to update the counters based on the outcome
+        :param self:
+        :return:
+        '''
+    print("Update_counters")
+
+    if game.moved_back:
+      print("token has been moved back, DO nothing")
+      game.n_mistakes += 1
+      game.n_attempt_per_token += 1
+      game.set_n_attempt_per_token(game.n_attempt_per_token)
+      game.set_n_mistakes(game.n_mistakes)
+
+      if game.n_attempt_per_token > game.n_max_attempt_per_token:
+        print("Max attempt reached")
+        game.set_n_correct_move(game.get_n_correct_move() + 1)
+        game.set_n_attempt_per_token(1)
+        self.n_sociable_per_token = 0
+        self.n_timeout_per_token = 0
+
+    elif game.outcome == 0:
+      game.n_timeout_per_token += 1
+      game.n_mistakes += 1
+      game.n_attempt_per_token += 1
+      game.set_n_attempt_per_token(game.n_attempt_per_token)
+      game.set_n_mistakes(game.n_mistakes)
+
+      # check if the user reached his max number of attempts
+      if game.n_attempt_per_token > game.n_max_attempt_per_token:
+        print("Max attempt reached")
+        game.set_n_correct_move(game.get_n_correct_move() + 1)
+        game.set_n_attempt_per_token(1)
+        self.n_sociable_per_token = 0
+        self.n_timeout_per_token = 0
+
+    # get current move and check if it is the one expeceted in the solution list
+    elif game.outcome == 1:
+      game.set_n_correct_move(game.get_n_correct_move() + 1)
+      game.set_n_attempt_per_token(1)
+      self.n_sociable_per_token = 0
+      self.n_timeout_per_token = 0
+
+    elif game.outcome == -1:
+      print("wrong_solution")
+      game.n_mistakes += 1
+      game.n_attempt_per_token += 1
+      game.set_n_attempt_per_token(game.n_attempt_per_token)
+      game.set_n_mistakes(game.n_mistakes)
+
+      # check if the user reached his max number of attempts
+      if game.n_attempt_per_token > game.n_max_attempt_per_token:
+        print("Max attempt reached")
+        game.set_n_correct_move(game.get_n_correct_move() + 1)
+        game.set_n_attempt_per_token(1)
+        self.n_sociable_per_token = 0
+        self.n_timeout_per_token = 0
+
+
   def robot_provide_outcome(self, game, robot):
     '''
     Robot provides the user with the outcome of their move
@@ -97,7 +157,6 @@ class StateMachine(enum.Enum):
     :return:
     '''
     print("R_OUTCOME")
-    token_sol = game.get_token_sol()
 
     if game.moved_back:
       print("token has been moved back, DO nothing")
@@ -114,11 +173,6 @@ class StateMachine(enum.Enum):
       print("timeout")
       robot.action["timeout"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
       game.outcome = 0
-      game.n_mistakes += 1
-      game.n_attempt_per_token += 1
-      game.set_n_attempt_per_token(game.n_attempt_per_token)
-      game.set_n_mistakes(game.n_mistakes)
-      attempt = game.n_attempt_per_token
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
 
       # check if the user reached his max number of attempts
@@ -136,18 +190,11 @@ class StateMachine(enum.Enum):
       print("correct_solution ", game.get_n_correct_move())
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
 
-
     elif game.detected_token[0] != game.solution[game.n_correct_move] \
         or game.detected_token[2] != game.solution.index(game.detected_token[0]) + 1:
       game.outcome = -1
       print("wrong_solution")
       robot.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
-      #self.robot_move_back(game, robot)
-      game.n_mistakes += 1
-      game.n_attempt_per_token += 1
-      game.set_n_attempt_per_token(game.n_attempt_per_token)
-      game.set_n_mistakes(game.n_mistakes)
-      attempt = game.n_attempt_per_token
       self.CURRENT_STATE = self.S_ROBOT_MOVE_TOKEN_BACK
       self.user_move_back(game, robot)
 
@@ -167,8 +214,6 @@ class StateMachine(enum.Enum):
     token = game.get_token_sol()
     success = robot.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad")
     input = raw_input("move the token in the correct position and press a button")
-    game.set_n_correct_move(game.get_n_correct_move() + 1)
-    game.set_n_attempt_per_token(1)
     self.CURRENT_STATE = self.S_ROBOT_ASSIST
     self.b_user_moved_token_back = True
     return self.b_robot_moved_token_back
@@ -269,10 +314,6 @@ class StateMachine(enum.Enum):
         sm.b_user_placed_token_back = True
         game.elapsed_time_per_token_spec_t1 = time.time() - game.elapsed_time_per_token_spec_t0
         game.elapsed_time_per_token_gen_t1 += game.elapsed_time_per_token_spec_t1
-        game.n_mistakes += 1
-        game.n_attempt_per_token += 1
-        game.set_n_attempt_per_token(game.n_attempt_per_token)
-        game.set_n_mistakes(game.n_mistakes)
         return sm.b_user_placed_token_back
 
       '''or they can place it in the solution row'''
@@ -384,20 +425,20 @@ def main():
   log_spec = Log(file_spec)
   entry_log_spec = ['token_id', 'from', 'to',
                     'robot_assistance', "react_time",
-                    'elapsed_time', "attempt", "sociable"]
+                    'elapsed_time', "attempt", "timeout", "sociable"]
   game.move_info_spec = {e: e for e in entry_log_spec}
   game.move_info_spec_vect.append(game.move_info_spec)
   log_spec.add_row_entry(game.move_info_spec)
 
   log_gen = Log(file_gen)
   entry_log_gen = ["token_id", "from", "to", "avg_robot_assistance_per_move", "cum_react_time",
-                   "cum_elapsed_time", "attempt", "sociable"]
+                   "cum_elapsed_time", "attempt", "timeout", "sociable"]
   game.move_info_gen = {e: e for e in entry_log_gen}
   game.move_info_gen_vect.append(game.move_info_gen)
   log_gen.add_row_entry(game.move_info_gen)
 
   log_summary = Log(file_summary)
-  entry_log_summary = ["n_attempt", "n_sociable", "avg_lev_assistance", "tot_react_time", "tot_elapsed_time"]
+  entry_log_summary = ["n_attempt", "n_timeout",  "n_sociable", "avg_lev_assistance", "tot_react_time", "tot_elapsed_time"]
   game.move_info_summary = {e: e for e in entry_log_summary}
   log_summary.add_row_entry(game.move_info_summary)
   sm = StateMachine(1)
@@ -420,15 +461,16 @@ def main():
     elif sm.CURRENT_STATE.value == sm.S_ROBOT_OUTCOME.value:
       # these are reported only because the variables are already reset when a correct move occurred
       sm.robot_provide_outcome(game, tiago_robot)
-      info = game.store_info_spec(game.outcome)
-      log_spec.add_row_entry(info)
-      # {'token_id':'', 'from':'', 'to':'', 'robot_assistance':'', 'react_time':'', 'elapsed_time':'', 'attempt':''}
-      # if you have done the correct move or you reach the maximum number of attempts then store the data
+
       if (game.outcome == 1 or (game.outcome == 0 and game.n_attempt_per_token == game.n_max_attempt_per_token)
           or (game.outcome == -1 and game.n_attempt_per_token == game.n_max_attempt_per_token)):
         entry_log = game.store_info_gen()
         log_gen.add_row_entry(entry_log)
-        game.reset_counters()
+
+      info = game.store_info_spec(game.outcome)
+      log_spec.add_row_entry(info)
+      sm.update_counters(game)
+      game.reset_counters()
       game.reset_detected_token()
 
   entry_log = game.store_info_summary()
