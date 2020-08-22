@@ -1,7 +1,7 @@
 <launch>
   <node pkg="carf" type="main.py" name="carf" output="screen"/>
   
-  <arg name="language" default="es_ES"/>
+  <arg name="language" default="en_GB"/>
       <param name="/language" value="$(arg language)" />
   <arg name="config_path" default="$(find robot_behaviour)/src/robot_behaviour/config/sentences"/>
       <param name="/config_path" value="$(arg config_path)" />
