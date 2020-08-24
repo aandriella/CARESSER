@@ -147,19 +147,19 @@ class Game(object):
     for c in range(1, self.height+1):
       if token_from == self.width*(c+1)-1:
         #case 1
-        tokens_subset = [(token_id, token_from), (self.initial_board[token_from-2], token_from-2),
-                         (self.initial_board[token_from-1], token_from-1)]
+        tokens_subset = [(token_id, token_from), (self.current_board[token_from-2], token_from-2),
+                         (self.current_board[token_from-1], token_from-1)]
         return tokens_subset
 
       elif token_from == (self.width*c):
         #case 3
-        tokens_subset = [(token_id, token_from), (self.initial_board[token_from+1], token_from+1),
-                         (self.initial_board[token_from+2], token_from+2)]
+        tokens_subset = [(token_id, token_from), (self.current_board[token_from+1], token_from+1),
+                         (self.current_board[token_from+2], token_from+2)]
         return tokens_subset
 
     #case 2
-    tokens_subset = [(token_id, token_from), (self.initial_board[token_from-1], token_from-1),
-                     (self.initial_board[token_from+1], token_from+1)]
+    tokens_subset = [(token_id, token_from), (self.current_board[token_from-1], token_from-1),
+                     (self.current_board[token_from+1], token_from+1)]
     return tokens_subset
 
   def add_info_gen_vect(self, dict):
