@@ -33,7 +33,7 @@ class Game(object):
     self.n_mistakes = 0
     self.n_correct_move = 0
     #subscriber variables from detect_move
-    self.detected_token = []
+    self.detected_token = ("", 0, 0)
     self.picked = False
     self.placed = False
     self.moved_back = False
@@ -64,7 +64,7 @@ class Game(object):
 
   def get_move_event_callback(self, msg):
     '''callback from the topic detected_move to get the detected move if so'''
-    self.detected_token = msg.detected_token
+    self.detected_token = (msg.detected_token[0], int(msg.detected_token[1]), int(msg.detected_token[2]))
     self.picked = msg.picked
     self.placed = msg.placed
     self.moved_back = msg.moved_back
@@ -123,7 +123,7 @@ class Game(object):
   def get_token_sol(self):
     '''This method returns the correct token to move its initial location its final location'''
     token_id = self.solution[self.n_correct_move]
-    token_from = [index for index in range(len(self.initial_board)) if self.initial_board[index] == token_id].pop()
+    token_from = [index for index in range(len(self.initial_board)) if self.initial_board[index] == token_id].pop()+1
     token_to = self.n_correct_move+1
     return (token_id, token_from, token_to)
 
