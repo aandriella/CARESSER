@@ -66,7 +66,7 @@ class StateMachine(enum.Enum):
     token_sol = game.get_token_sol()
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
-    game.robot_assistance = random.randint(0, 5)
+    game.robot_assistance = 3#random.randint(0, 5)
     success = robot.action["assistance"].__call__(lev_id=game.robot_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset)
 
     self.b_robot_assist_finished = True
@@ -169,7 +169,7 @@ class StateMachine(enum.Enum):
         self.b_user_reached_max_attempt = True
         self.robot_move_correct_token(game, robot)
 
-    elif game.detected_token == []:
+    elif game.detected_token == ("",0,0):
       print("timeout")
       robot.action["timeout"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
       game.outcome = 0
@@ -184,7 +184,7 @@ class StateMachine(enum.Enum):
 
     # get current move and check if it is the one expeceted in the solution list
     elif game.detected_token[0] == game.solution[game.n_correct_move] \
-        and game.detected_token[2] == str(game.solution.index(game.detected_token[0]) + 1):
+        and game.detected_token[2] == (game.solution.index(game.detected_token[0]) + 1):
       robot.action["congrats"].__call__(counter=game.n_attempt_per_token-1, facial_expression="happy")
       game.outcome = 1
       print("correct_solution ", game.get_n_correct_move())
@@ -196,6 +196,8 @@ class StateMachine(enum.Enum):
       print("wrong_solution")
       robot.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
       self.CURRENT_STATE = self.S_ROBOT_MOVE_TOKEN_BACK
+      #if robot replace with
+      #self.robot_move_back(game, robot)
       self.user_move_back(game, robot)
 
       # check if the user reached his max number of attempts
@@ -211,18 +213,25 @@ class StateMachine(enum.Enum):
   def robot_move_correct_token(self, game, robot):
     print("Robot moves the correct token as the user reached the max number of attempts")
     # get the current solution
-    token = game.get_token_sol()
-    success = robot.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad")
+    token_id, token_from, token_to = game.get_token_sol()
+    success = robot.action["max_attempt"].__call__(token=token_id, counter=game.n_attempt_per_token-1, facial_expression="sad")
+    #while(game.detected_token != (token_id, token_from, token_to)):
+    #  pass
+    #print("Robot moved the token in the correct location")
+    
     input = raw_input("move the token in the correct position and press a button")
     self.CURRENT_STATE = self.S_ROBOT_ASSIST
-    self.b_user_moved_token_back = True
-    return self.b_robot_moved_token_back
+    self.b_robot_moved_correct_token = True
+    return self.b_robot_moved_correct_token
 
   def robot_move_back(self, game, robot):
     # user moved the token in an incorrect location
     # robot moved it back
-    print("Robot moved back the token")
+    token_id, token_from, token_to = game.detected_token
     success = robot.action["move_back"].__call__(who="robot", token=game.get_token_sol(), counter=game.n_attempt_per_token-1, facial_expression="neutral")
+    while(game.detected_token != (token_id, token_to, token_from)):
+      pass
+    print("Robot moved back the token in its initial location")
     self.CURRENT_STATE = self.S_ROBOT_ASSIST
     self.b_robot_moved_token_back = True
     return self.b_robot_moved_token_back
@@ -230,12 +239,12 @@ class StateMachine(enum.Enum):
   def user_move_back(self, game, robot):
     # user moved the token in an incorrect location
     # robot moved it back
-    print("User moved back the token")
-    #success = robot.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1)
     # get the initial location of the placed token and move back there
-    token, _to, _from = game.detected_token
-    while (game.detected_token != [token, _from, _to]):
+    token_id, token_from, token_to = game.detected_token
+    success = robot.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1, facial_expression="neutral")
+    while (game.detected_token != (token_id, token_to, token_from)):
       pass
+    print("User moved back the token in its initial location")
     self.CURRENT_STATE = self.S_ROBOT_ASSIST
     self.b_user_moved_token_back = True
     return self.b_user_moved_token_back
@@ -271,7 +280,7 @@ class StateMachine(enum.Enum):
       print("U_PICK")
       sm.CURRENT_STATE = sm.S_ROBOT_FEEDBACK
       detected_token, picked, _, _ = game.get_move_event()
-      while (not picked and (detected_token == [])):
+      while (not picked and (detected_token == ("",0,0))):
         if check_move_timeout(game):
           detected_token, picked, _, _ = game.get_move_event()
         else:
@@ -407,13 +416,13 @@ def main():
   path = os.path.abspath(__file__)
   dir_path = os.path.dirname(path)
   parent_dir_of_file = os.path.dirname(dir_path)
-  path_name = parent_dir_of_file + "/log/" + str(user_id)
+  path_name = parent_dir_of_file + "/robot_in_the_loop/log/" + str(user_id)
 
   if not os.path.exists(path_name):
     os.makedirs(path_name)
   else:
     user_id = raw_input("The folder already exists, please remove it or create a new one:")
-    path_name = parent_dir_of_file + "/log/" + user_id
+    path_name = parent_dir_of_file + "/robot_in_the_loop/log/" + user_id
     if not os.path.exists(path_name):
       os.makedirs(path_name)
 
