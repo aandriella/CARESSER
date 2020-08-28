@@ -33,7 +33,7 @@ class Game(object):
     self.n_mistakes = 0
     self.n_correct_move = 0
     #subscriber variables from detect_move
-    self.detected_token = ["", 0 , 0]
+    self.detected_token = ("", 0 , 0)
     self.picked = False
     self.placed = False
     self.moved_back = False
@@ -64,8 +64,7 @@ class Game(object):
 
   def get_move_event_callback(self, msg):
     '''callback from the topic detected_move to get the detected move if so'''
-    self.detected_token =(msg.detected_token[0], int(msg.detected_token[1],
-			  msg.detected_token[2])) 
+    self.detected_token =(msg.detected_token[0], int(msg.detected_token[1]), int(msg.detected_token[2]))
     self.picked = msg.picked
     self.placed = msg.placed
     self.moved_back = msg.moved_back
@@ -139,30 +138,32 @@ class Game(object):
   def get_subset(self, n=3):
     '''This method returns the subset n of tokens closed to the correct token'''
     token_id, token_from, token_to = self.get_token_sol()
-    tokens_subset = []
     '''three cases can happen: 
     1:the solution is at the right side of the board
     2:the solution is in the middle
     3:the solution is at the left side of the board
+    N.B: when getting the token from the array we need to decrease the counter of 1 as the counter 
+    of the list starts from 0
     '''
-    for c in range(1, self.height+1):
-      if token_from == self.width*(c+1)-1:
+    for c in range(1, self.height):
+      if token_from == self.width*(c+1):
         #case 1
-        tokens_subset = [(token_id, token_from), (self.current_board[token_from-2], token_from-2),
-                         (self.current_board[token_from-1], token_from-1)]
+
+        tokens_subset = [(token_id, token_from), (self.current_board[token_from-3], token_from-2),
+                         (self.current_board[token_from-2], token_from-1)]
         tokens_subset_no_empty = [token for token in tokens_subset if token[0] != "0"]
         return tokens_subset_no_empty
 
-      elif token_from == (self.width*c):
+      elif token_from == (self.width*c)+1:
         #case 3
-        tokens_subset = [(token_id, token_from), (self.current_board[token_from+1], token_from+1),
-                         (self.current_board[token_from+2], token_from+2)]
+        tokens_subset = [(token_id, token_from), (self.current_board[token_from], token_from+1),
+                         (self.current_board[token_from+1], token_from+2)]
         tokens_subset_no_empty = [token for token in tokens_subset if token[0] != "0"]
         return tokens_subset_no_empty
 
     #case 2
-    tokens_subset = [(token_id, token_from), (self.current_board[token_from-1], token_from-1),
-                     (self.current_board[token_from+1], token_from+1)]
+    tokens_subset = [(token_id, token_from), (self.current_board[token_from-2], token_from-1),
+                     (self.current_board[token_from], token_from+1)]
     tokens_subset_no_empty = [token for token in tokens_subset if token[0] != "0"]
 
     return tokens_subset_no_empty
@@ -238,6 +239,6 @@ class Game(object):
 
 
   def reset_detected_token(self):
-    self.detected_token = []
+    self.detected_token = ("",0,0)
     self.picked = False
     self.placed = False
