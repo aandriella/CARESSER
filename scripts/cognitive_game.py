@@ -53,6 +53,20 @@ class Game(object):
     self.move_info_gen_vect = list()
     self.move_info_spec_vect = list()
     self.move_info_summary_vect = list()
+    #for IRL sim
+    self.game_state_list = {'beg':0, 'mid':1, 'end':2}
+    self.n_attempt_per_token_list = {'att_1':1, 'att_2':2, 'att_3':3, 'att_4':4}
+    self.user_action_list = {'correct':1, 'timeout':0, 'wrong':-1}
+    self.state_space = ()
+
+    #for BN sim
+    robot_assistance_per_action = []
+    robot_feedback_per_action = []
+    game_state_per_action = []
+    attempt_per_action = []
+    episode = []
+
+
 
   def get_board_event_callback(self, msg):
     '''callback from the topic board_status to get the status of the current_board'''
@@ -244,3 +258,5 @@ class Game(object):
     self.detected_token = ("",0,0)
     self.picked = False
     self.placed = False
+    self.moved_back = False
+
