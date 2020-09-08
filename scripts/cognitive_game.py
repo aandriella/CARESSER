@@ -64,7 +64,9 @@ class Game(object):
 
   def get_move_event_callback(self, msg):
     '''callback from the topic detected_move to get the detected move if so'''
-    self.detected_token =(msg.detected_token[0], int(msg.detected_token[1]), int(msg.detected_token[2]))
+    if msg.detected_token!=():
+      self.detected_token =(msg.detected_token[0], int(msg.detected_token[1]), int(msg.detected_token[2]))
+
     self.picked = msg.picked
     self.placed = msg.placed
     self.moved_back = msg.moved_back
