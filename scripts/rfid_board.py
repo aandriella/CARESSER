@@ -28,7 +28,7 @@ class RfidBoard():
 		self.electro_board_with_tokens = dict()
 		self.current_board = dict()
 		self.initial_board = dict()
-		self.detected_token = ()
+		self.detected_token = ["",0,0]
 		self.picked = False
 		self.placed = False
 		self.moved_back = False
