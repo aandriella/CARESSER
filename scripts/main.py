@@ -66,7 +66,7 @@ class StateMachine(enum.Enum):
     token_sol = game.get_token_sol()
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
-    game.robot_assistance = 3#random.randint(0, 5)
+    game.robot_assistance = 4#random.randint(0, 5)
     success = robot.action["assistance"].__call__(lev_id=game.robot_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset)
 
     self.b_robot_assist_finished = True
@@ -109,8 +109,8 @@ class StateMachine(enum.Enum):
         print("Max attempt reached")
         game.set_n_correct_move(game.get_n_correct_move() + 1)
         game.set_n_attempt_per_token(1)
-        self.n_sociable_per_token = 0
-        self.n_timeout_per_token = 0
+        game.n_sociable_per_token = 0
+        game.n_timeout_per_token = 0
 
     elif game.outcome == 0:
       game.n_timeout_per_token += 1
@@ -124,15 +124,15 @@ class StateMachine(enum.Enum):
         print("Max attempt reached")
         game.set_n_correct_move(game.get_n_correct_move() + 1)
         game.set_n_attempt_per_token(1)
-        self.n_sociable_per_token = 0
-        self.n_timeout_per_token = 0
+        game.n_sociable_per_token = 0
+        game.n_timeout_per_token = 0
 
     # get current move and check if it is the one expeceted in the solution list
     elif game.outcome == 1:
       game.set_n_correct_move(game.get_n_correct_move() + 1)
       game.set_n_attempt_per_token(1)
-      self.n_sociable_per_token = 0
-      self.n_timeout_per_token = 0
+      game.n_sociable_per_token = 0
+      game.n_timeout_per_token = 0
 
     elif game.outcome == -1:
       print("wrong_solution")
@@ -146,8 +146,8 @@ class StateMachine(enum.Enum):
         print("Max attempt reached")
         game.set_n_correct_move(game.get_n_correct_move() + 1)
         game.set_n_attempt_per_token(1)
-        self.n_sociable_per_token = 0
-        self.n_timeout_per_token = 0
+        game.n_sociable_per_token = 0
+        game.n_timeout_per_token = 0
 
 
   def robot_provide_outcome(self, game, robot):
@@ -168,19 +168,21 @@ class StateMachine(enum.Enum):
         self.S_ROBOT_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
         self.robot_move_correct_token(game, robot)
+        game.outcome = 1
 
     elif game.detected_token == ("",0,0):
-      print("timeout")
-      robot.action["timeout"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
-      game.outcome = 0
-      self.CURRENT_STATE = self.S_ROBOT_ASSIST
-
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
         print("Max attempt reached")
         self.S_ROBOT_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
         self.robot_move_correct_token(game, robot)
+        game.outcome = 1
+      else:
+        print("timeout")
+        robot.action["timeout"].__call__(counter=game.n_attempt_per_token - 1, facial_expression="sad")
+        game.outcome = 0
+        self.CURRENT_STATE = self.S_ROBOT_ASSIST
 
     # get current move and check if it is the one expeceted in the solution list
     elif game.detected_token[0] == game.solution[game.n_correct_move] \
@@ -206,6 +208,8 @@ class StateMachine(enum.Enum):
         self.S_ROBOT_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
         self.robot_move_correct_token(game, robot)
+        game.outcome = 1
+
 
     self.b_robot_outcome_finished = True
     return self.b_robot_outcome_finished
@@ -220,7 +224,7 @@ class StateMachine(enum.Enum):
     #print("Robot moved the token in the correct location")
     
     input = raw_input("move the token in the correct position and press a button")
-    self.CURRENT_STATE = self.S_ROBOT_ASSIST
+    self.CURRENT_STATE = self.S_ROBOT_OUTCOME
     self.b_robot_moved_correct_token = True
     return self.b_robot_moved_correct_token
 
@@ -367,7 +371,7 @@ class StateMachine(enum.Enum):
         else:
           print("Something went wrong with user place")
     else:
-      print("user_pick_token==False")
+      print("user_pick_token==False-expect_timeout")
       self.CURRENT_STATE = self.S_ROBOT_OUTCOME
 
   def num_to_func_to_str(self, argument):
@@ -409,7 +413,7 @@ def main():
   # we create the robot instance
   speech = Speech(language)
   face = Face()
-  gesture = None
+  gesture = None#Gesture()
   tiago_robot = Robot(speech, sentences_file, face, gesture)
 
   #user_id = raw_input("please, insert the id of the user:")
