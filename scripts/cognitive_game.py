@@ -149,7 +149,7 @@ class Game(object):
     for r in range(self.height):
       for c in range(self.width):
         if token_from == c+(r*self.width):
-          return r+1
+          return self.height-r
 
   def get_subset(self, n=3):
     '''This method returns the subset n of tokens closed to the correct token'''
@@ -260,3 +260,9 @@ class Game(object):
     self.placed = False
     self.moved_back = False
 
+
+def main():
+  pass
+
+if __name__ == "__main__":
+  main()
