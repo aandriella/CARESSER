@@ -66,7 +66,7 @@ class StateMachine(enum.Enum):
     token_sol = game.get_token_sol()
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
-    game.robot_assistance = 4#random.randint(0, 5)
+    game.robot_assistance = 2#random.randint(0, 5)
     success = robot.action["assistance"].__call__(lev_id=game.robot_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset)
 
     self.b_robot_assist_finished = True
@@ -199,8 +199,8 @@ class StateMachine(enum.Enum):
       robot.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
       self.CURRENT_STATE = self.S_ROBOT_MOVE_TOKEN_BACK
       #if robot replace with
-      #self.robot_move_back(game, robot)
-      self.user_move_back(game, robot)
+      self.robot_move_back(game, robot)
+      #self.user_move_back(game, robot)
 
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
@@ -210,15 +210,14 @@ class StateMachine(enum.Enum):
         self.robot_move_correct_token(game, robot)
         game.outcome = 1
 
-
     self.b_robot_outcome_finished = True
     return self.b_robot_outcome_finished
 
   def robot_move_correct_token(self, game, robot):
     print("Robot moves the correct token as the user reached the max number of attempts")
     # get the current solution
-    token_id, token_from, token_to = game.get_token_sol()
-    success = robot.action["max_attempt"].__call__(token=token_id, counter=game.n_attempt_per_token-1, facial_expression="sad")
+    token = game.get_token_sol()
+    success = robot.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad")
     #while(game.detected_token != (token_id, token_from, token_to)):
     #  pass
     #print("Robot moved the token in the correct location")
@@ -231,9 +230,10 @@ class StateMachine(enum.Enum):
   def robot_move_back(self, game, robot):
     # user moved the token in an incorrect location
     # robot moved it back
-    token_id, token_from, token_to = game.detected_token
-    success = robot.action["move_back"].__call__(who="robot", token=game.get_token_sol(), counter=game.n_attempt_per_token-1, facial_expression="neutral")
-    while(game.detected_token != (token_id, token_to, token_from)):
+    robot.cancel_action()
+    token = game.detected_token
+    success = robot.action["move_back"].__call__(who="robot", token=token, counter=game.n_attempt_per_token-1, facial_expression="neutral")
+    while(game.detected_token != token):
       pass
     print("Robot moved back the token in its initial location")
     self.CURRENT_STATE = self.S_ROBOT_ASSIST
@@ -279,7 +279,7 @@ class StateMachine(enum.Enum):
       else:
         return False
 
-    def user_pick_token(sm, game):
+    def user_pick_token(sm, game, robot):
       game.react_time_per_token_spec_t0 = time.time()
       print("U_PICK")
       sm.CURRENT_STATE = sm.S_ROBOT_FEEDBACK
@@ -291,7 +291,8 @@ class StateMachine(enum.Enum):
           sm.b_user_reached_timeout = True
           game.react_time_per_token_spec_t0 = time.time()
           return False
-
+      if robot.get_action_state() == 0:
+        game.react_time_per_token_spec_t0 = time.time()
       game.elapsed_time_per_token_spec_t0 = time.time()
       game.react_time_per_token_spec_t1 = time.time() - game.react_time_per_token_spec_t0
       game.react_time_per_token_gen_t1 += game.react_time_per_token_spec_t1
@@ -356,7 +357,7 @@ class StateMachine(enum.Enum):
 
     self.CURRENT_STATE = self.S_USER_ACTION
     # if the user picks a token and SOCIABLE is active
-    if user_pick_token(self, game):
+    if user_pick_token(self, game, robot):
       if game.with_SOCIABLE:
         if robot_provide_feedback(self, game, robot):
           if user_place(self, game):
@@ -407,13 +408,12 @@ def main():
   with_SOCIABLE = rospy.get_param("/sociable")
   objective = rospy.get_param("/objective")
 
-
   # we create the game instance
-  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=10, objective=objective, with_SOCIABLE=with_SOCIABLE)
+  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=20, objective=objective, with_SOCIABLE=with_SOCIABLE)
   # we create the robot instance
   speech = Speech(language)
   face = Face()
-  gesture = None#Gesture()
+  gesture = Gesture()
   tiago_robot = Robot(speech, sentences_file, face, gesture)
 
   #user_id = raw_input("please, insert the id of the user:")
