@@ -148,8 +148,8 @@ class Game(object):
     token_id, token_from, token_to = self.get_token_sol()
     for r in range(self.height):
       for c in range(self.width):
-        if token_from == c+(r*self.width):
-          return self.height-r
+        if token_from == c+(r*self.width)+1:
+          return r+1
 
   def get_subset(self, n=3):
     '''This method returns the subset n of tokens closed to the correct token'''
