@@ -66,8 +66,9 @@ class StateMachine(enum.Enum):
     token_sol = game.get_token_sol()
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
+    delay_for_speech = 2
     game.robot_assistance = 2#random.randint(0, 5)
-    success = robot.action["assistance"].__call__(lev_id=game.robot_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset)
+    success = robot.action["assistance"].__call__(lev_id=game.robot_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset, delay_for_speech=delay_for_speech)
 
     self.b_robot_assist_finished = True
     self.b_robot_reengaged_user == False
@@ -218,11 +219,10 @@ class StateMachine(enum.Enum):
     # get the current solution
     token = game.get_token_sol()
     success = robot.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad")
-    #while(game.detected_token != (token_id, token_from, token_to)):
-    #  pass
-    #print("Robot moved the token in the correct location")
-    
-    input = raw_input("move the token in the correct position and press a button")
+    while(game.detected_token != (token)):
+     pass
+    print("Robot moved the token in the correct location")
+    #input = raw_input("move the token in the correct position and press a button")
     self.CURRENT_STATE = self.S_ROBOT_OUTCOME
     self.b_robot_moved_correct_token = True
     return self.b_robot_moved_correct_token
@@ -291,8 +291,10 @@ class StateMachine(enum.Enum):
           sm.b_user_reached_timeout = True
           game.react_time_per_token_spec_t0 = time.time()
           return False
+      #here we check if the robot is still moving if so stop it
       if robot.get_action_state() == 0:
         game.react_time_per_token_spec_t0 = time.time()
+        robot.cancel_action()
       game.elapsed_time_per_token_spec_t0 = time.time()
       game.react_time_per_token_spec_t1 = time.time() - game.react_time_per_token_spec_t0
       game.react_time_per_token_gen_t1 += game.react_time_per_token_spec_t1
@@ -300,7 +302,7 @@ class StateMachine(enum.Enum):
       return sm.b_user_picked_token
 
     def robot_provide_feedback(sm, game, robot):
-      robot.cancel_action()
+      #robot.cancel_action()
       print("R_FEEDBACK")
       game.n_sociable_per_token += 1
       game.n_tot_sociable += 1
