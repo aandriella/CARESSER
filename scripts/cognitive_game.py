@@ -242,17 +242,18 @@ class Game(object):
     self.move_info_summary["tot_elapsed_time"] = sum([elem['cum_elapsed_time'] for elem in self.move_info_gen_vect])
     return self.move_info_summary
 
-  def reset_counters(self):
+  def reset_counters_spec(self):
     self.react_time_per_token_spec_t1 = 0
-    self.react_time_per_token_gen_t1 = 0
     self.react_time_per_token_spec_t0 = 0
-    self.react_time_per_token_gen_t0 = 0
     self.elapsed_time_per_token_spec_t1 = 0
-    self.elapsed_time_per_token_gen_t1 = 0
     self.elapsed_time_per_token_spec_t0 = 0
-    self.elapsed_time_per_token_gen_t0 = 0
     self.avg_robot_assistance_per_move = 0
 
+  def reset_counters_gen(self):
+    self.react_time_per_token_gen_t1 = 0
+    self.react_time_per_token_gen_t0 = 0
+    self.elapsed_time_per_token_gen_t1 = 0
+    self.elapsed_time_per_token_gen_t0 = 0
 
   def reset_detected_token(self):
     self.detected_token = ("",0,0)
