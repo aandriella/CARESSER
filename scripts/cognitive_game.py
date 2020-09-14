@@ -2,7 +2,6 @@ import rospy
 from board_state.msg import TokenMsg
 from board_state.msg import BoardMsg
 
-
 class Game(object):
   def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective, with_SOCIABLE):
     rospy.init_node('big_hero', anonymous=True)
@@ -135,6 +134,19 @@ class Game(object):
 
   def set_n_max_attempt_per_token(self, value):
     self.n_max_attempt_per_token = value
+
+  def get_game_state(self):
+    '''
+    get the game state : BEG, MIDDLE and END
+    Return:
+      the id of the game state
+    '''
+    if self.n_correct_move < self.game_state['beg']:
+      return 0
+    elif self.n_correct_move >= self.game_state['beg'] and self.n_correct_move < self.game_state['mid']:
+      return 1
+    else:
+      return 2
 
   def get_token_sol(self):
     '''This method returns the correct token to move its initial location its final location'''
