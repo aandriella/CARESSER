@@ -360,30 +360,28 @@ def main():
     if not os.path.exists(path_name):
       os.makedirs(path_name)
 
+  file_spec = path_name + "/log_spec.csv"
+  file_gen = path_name + "/log_gen.csv"
+  file_summary = path_name + "/log_summary.csv"
 
-  file_spec = path_name + "/log_spec.txt"
-  file_gen = path_name + "/log_gen.txt"
-  file_summary = path_name + "/log_summary.txt"
+  entry_log_spec = {'game_state':'game_state', 'token_id':'token_id', 'from':'from', 'to':'to',
+                    'robot_assistance':'robot_assistance', "react_time":'react_time',
+                    'elapsed_time':'elapsed_time', "attempt":'attempt', "timeout":'timeout', "sociable":'sociable'}
 
-  log_spec = Log(file_spec)
-  entry_log_spec = ['game_state', 'token_id', 'from', 'to',
-                    'robot_assistance', "react_time",
-                    'elapsed_time', "attempt", "timeout", "sociable"]
-  game.move_info_spec = {e: e for e in entry_log_spec}
-  game.move_info_spec_vect.append(game.move_info_spec)
-  log_spec.add_row_entry(game.move_info_spec)
+  entry_log_gen = {"token_id":'token_id', "from":'from', "to":'to', "avg_robot_assistance_per_move":'avg_robot_assistance_per_move',
+                  "cum_react_time":"cum_react_time", "cum_elapsed_time":"cum_elapsed_time", "attempt":"attempt",
+                  "timeout":"timeout", "sociable":"sociable"}
+  entry_log_summary = {"n_attempt":"n_attempt", "n_timeout":"n_timeout", "n_sociable":"n_sociable",
+                       "avg_lev_assistance":"avg_lev_assistance", "tot_react_time":"tot_react_time",
+                       "tot_elapsed_time":"tot_elapsed_time"}
 
-  log_gen = Log(file_gen)
-  entry_log_gen = ["token_id", "from", "to", "avg_robot_assistance_per_move", "cum_react_time",
-                   "cum_elapsed_time", "attempt", "timeout", "sociable"]
-  game.move_info_gen = {e: e for e in entry_log_gen}
-  game.move_info_gen_vect.append(game.move_info_gen)
-  log_gen.add_row_entry(game.move_info_gen)
+  log = Log(filename_spec=file_spec, fieldnames_spec=entry_log_spec, filename_gen=file_gen,
+            fieldnames_gen=entry_log_gen, filename_sum=file_summary, fieldnames_sum=entry_log_summary)
 
-  log_summary = Log(file_summary)
-  entry_log_summary = ["n_attempt", "n_timeout",  "n_sociable", "avg_lev_assistance", "tot_react_time", "tot_elapsed_time"]
-  game.move_info_summary = {e: e for e in entry_log_summary}
-  log_summary.add_row_entry(game.move_info_summary)
+  log.add_row_entry(log_filename=file_spec, fieldnames=entry_log_spec, data=entry_log_spec)
+  log.add_row_entry(log_filename=file_gen, fieldnames=entry_log_gen, data=entry_log_gen)
+  log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log_summary)
+
   sm = StateMachine(1)
 
   while game.get_n_correct_move() < game.task_length:
@@ -406,16 +404,17 @@ def main():
       if (game.outcome == 1 or (game.outcome == 0 and game.n_attempt_per_token == game.n_max_attempt_per_token)
           or (game.outcome == -1 and game.n_attempt_per_token == game.n_max_attempt_per_token)):
         entry_log = game.store_info_gen()
-        log_gen.add_row_entry(entry_log)
+        log.add_row_entry(log_filename=file_gen, fieldnames=entry_log_gen, data=entry_log)
+        game.reset_counters_gen()
 
-      info = game.store_info_spec(game.outcome)
-      log_spec.add_row_entry(info)
+      entry_log = game.store_info_spec(game.outcome)
+      log.add_row_entry(log_filename=file_spec, fieldnames=entry_log_spec, data=entry_log)
       sm.update_counters(game)
-      game.reset_counters()
+      game.reset_counters_spec()
       game.reset_detected_token()
 
   entry_log = game.store_info_summary()
-  log_summary.add_row_entry(entry_log)
+  log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log)
 
   for instance_spec in game.move_info_spec_vect:
     print(instance_spec)
