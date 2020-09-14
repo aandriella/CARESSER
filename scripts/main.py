@@ -5,10 +5,6 @@ This is the main class for running the entire game framework
 # import modules and classes
 from log import Log
 from cognitive_game import Game
-from robot_behaviour.robot_reproducer import Robot
-from robot_behaviour.speech_reproducer import Speech
-from robot_behaviour.face_reproducer import Face
-from robot_behaviour.gesture_reproducer import Gesture
 # import from libraries
 import enum
 import random
@@ -131,7 +127,7 @@ class StateMachine(enum.Enum):
     :return:
     '''
     print("R_OUTCOME")
-    input = raw_input("Please press a key when outcome has been provided")
+    #input = raw_input("Please press a key when outcome has been provided")
 
     if game.moved_back:
       print("token has been moved back, DO nothing")
@@ -147,12 +143,12 @@ class StateMachine(enum.Enum):
     elif game.detected_token == []:
       print("timeout")
       game.outcome = 0
-      self.CURRENT_STATE = self.S_ROBOT_ASSIST
+      self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
 
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
         print("Max attempt reached")
-        self.S_ROBOT_MOVE_CORRECT_TOKEN = True
+        self.S_CAREGIVER_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
         self.caregiver_move_correct_token(game)
 
@@ -315,19 +311,10 @@ class StateMachine(enum.Enum):
     self.CURRENT_STATE = self.S_USER_ACTION
     # if the user picks a token and SOCIABLE is active
     if user_pick_token(self, game):
-      if game.with_SOCIABLE:
-        if caregiver_provide_feedback(self):
-          if user_place(self, game):
-            return True
-          else:
-            print("Something went wrong with user place in SOCIABLE")
-        else:
-          print("Something went wrong with robot feedback")
+      if user_place(self, game):
+        return True
       else:
-        if user_place(self, game):
-          return True
-        else:
-          print("Something went wrong with user place")
+         print("Something went wrong with user place")
     else:
       print("user_pick_token==False")
       self.CURRENT_STATE = self.S_CAREGIVER_OUTCOME
@@ -352,22 +339,12 @@ class StateMachine(enum.Enum):
 
 
 def main():
-  language = rospy.get_param("/language")
-  config_path = rospy.get_param("/config_path")
-  sentences_file = ""
-  if language == "en_GB":
-    sentences_file = config_path+"/sentences_"+language
-  elif language == "es":
-    sentences_file =  config_path+"/sentences_"+language
-  elif language == "cat":
-    sentences_file =  config_path+"/sentences_"+language
   user_id = rospy.get_param("/user_id")
-  with_SOCIABLE = rospy.get_param("/sociable")
   objective = rospy.get_param("/objective")
 
-
   # we create the game instance
-  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=10, objective=objective, with_SOCIABLE=with_SOCIABLE)
+  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4,
+              timeout=15, objective=objective, game_state={'beg':2, 'mid':4, 'end':5})
 
   #user_id = raw_input("please, insert the id of the user:")
   path = os.path.abspath(__file__)
@@ -389,7 +366,7 @@ def main():
   file_summary = path_name + "/log_summary.txt"
 
   log_spec = Log(file_spec)
-  entry_log_spec = ['token_id', 'from', 'to',
+  entry_log_spec = ['game_state', 'token_id', 'from', 'to',
                     'robot_assistance', "react_time",
                     'elapsed_time', "attempt", "timeout", "sociable"]
   game.move_info_spec = {e: e for e in entry_log_spec}
