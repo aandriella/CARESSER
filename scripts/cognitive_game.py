@@ -4,14 +4,14 @@ from board_state.msg import BoardMsg
 
 
 class Game(object):
-  def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective, with_SOCIABLE):
+  def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective,
+               game_state):
     rospy.init_node('big_hero', anonymous=True)
     # subscriber for getting info from the board
     rospy.Subscriber("/detected_move", TokenMsg, self.get_move_event_callback)
     rospy.Subscriber("/board_status", BoardMsg, self.get_board_event_callback)
     #get the objective of the exercise from the launch file
     self.objective = objective
-    self.with_SOCIABLE = with_SOCIABLE
     #we need a sleep in order to give the system the time to get the board info
     self.current_board = []
     rospy.sleep(2)
@@ -25,6 +25,7 @@ class Game(object):
     self.outcome = 0
     self.width = board_size[0]
     self.height = board_size[1]
+    self.game_state = game_state
     #counters
     self.n_attempt_per_token = 1
     self.n_timeout_per_token = 0
@@ -54,6 +55,37 @@ class Game(object):
     self.move_info_spec_vect = list()
     self.move_info_summary_vect = list()
 
+    #TODO For the BN Simulator, initialise this variable according to the simulator
+    # self.caregiver_assistance_per_action = [][]
+    # self.caregiver_feedback_per_action = [][]
+    # self.game_state_per_action = [][]
+    # self.attempt_per_action = [][]
+    # self.caregiver_assistance_per_action = [][]
+    # self.caregiver_feedback_per_action = [][]
+    # self.game_state_per_action = [][]
+    # self.attempt_per_action = [][]
+
+  def get_game_state(self):
+    '''
+    get the game state : BEG, MIDDLE and END
+    Return:
+    the id of the game state
+    '''
+    if self.n_correct_move<self.game_state['beg']:
+      return 0
+    elif self.n_correct_move>=self.game_state['beg'] and self.n_correct_move<self.game_state['mid']:
+      return 1
+    else:
+      return 2
+
+  def get_token_sol(self):
+    '''This method returns the correct token to move its initial location its final location'''
+    token_id = self.solution[self.n_correct_move]
+    token_from = [index for index in range(len(self.initial_board)) if
+                     self.initial_board[index] == token_id].pop() + 1
+    token_to = self.n_correct_move + 1
+    return (token_id, token_from, token_to)
+
   def get_board_event_callback(self, msg):
     '''callback from the topic board_status to get the status of the current_board'''
     self.current_board = msg.data
@@ -64,10 +96,13 @@ class Game(object):
 
   def get_move_event_callback(self, msg):
     '''callback from the topic detected_move to get the detected move if so'''
-    self.detected_token = (msg.detected_token[0], int(msg.detected_token[1]), int(msg.detected_token[2]))
-    self.picked = msg.picked
-    self.placed = msg.placed
-    self.moved_back = msg.moved_back
+    if msg.detected_token == []:
+      self.detected_token = ("", 0, 0)
+    else:
+      self.detected_token = (msg.detected_token[0], int(msg.detected_token[1]), int(msg.detected_token[2]))
+      self.picked = msg.picked
+      self.placed = msg.placed
+      self.moved_back = msg.moved_back
 
   def get_move_event(self):
     '''This method just returns what is listened by the subscriber'''
@@ -96,9 +131,6 @@ class Game(object):
   def get_n_mistakes(self):
     return self.n_mistakes
 
-  def get_n_solution(self):
-    return self.n_solution
-
   def get_n_correct_move(self):
     return self.n_correct_move
 
@@ -114,57 +146,8 @@ class Game(object):
   def set_n_correct_move(self, value):
     self.n_correct_move = value
 
-  def set_n_solution(self, value):
-    self.n_solution = value
-
   def set_n_max_attempt_per_token(self, value):
     self.n_max_attempt_per_token = value
-
-  def get_token_sol(self):
-    '''This method returns the correct token to move its initial location its final location'''
-    token_id = self.solution[self.n_correct_move]
-    token_from = [index for index in range(len(self.initial_board)) if self.initial_board[index] == token_id].pop()+1
-    token_to = self.n_correct_move+1
-    return (token_id, token_from, token_to)
-
-  def get_token_row(self):
-    '''This method returns the row where the correct token is'''
-    token_id, token_from, token_to = self.get_token_sol()
-    for r in range(self.height):
-      for c in range(self.width):
-        if token_from == c+(r*self.width):
-          return r+1
-
-  def get_subset(self, n=3):
-    '''This method returns the subset n of tokens closed to the correct token'''
-    token_id, token_from, token_to = self.get_token_sol()
-    tokens_subset = []
-    '''three cases can happen: 
-    1:the solution is at the right side of the board
-    2:the solution is in the middle
-    3:the solution is at the left side of the board
-    '''
-    for c in range(1, self.height+1):
-      if token_from == self.width*(c+1)-1:
-        #case 1
-        tokens_subset = [(token_id, token_from), (self.current_board[token_from-2], token_from-2),
-                         (self.current_board[token_from-1], token_from-1)]
-        tokens_subset_no_empty = [token for token in tokens_subset if token[0] != "0"]
-        return tokens_subset_no_empty
-
-      elif token_from == (self.width*c):
-        #case 3
-        tokens_subset = [(token_id, token_from), (self.current_board[token_from+1], token_from+1),
-                         (self.current_board[token_from+2], token_from+2)]
-        tokens_subset_no_empty = [token for token in tokens_subset if token[0] != "0"]
-        return tokens_subset_no_empty
-
-    #case 2
-    tokens_subset = [(token_id, token_from), (self.current_board[token_from-1], token_from-1),
-                     (self.current_board[token_from+1], token_from+1)]
-    tokens_subset_no_empty = [token for token in tokens_subset if token[0] != "0"]
-
-    return tokens_subset_no_empty
 
   def add_info_gen_vect(self, dict):
     self.move_info_gen_vect.append(dict.copy())
@@ -175,6 +158,7 @@ class Game(object):
   def store_info_spec(self, outcome):
     #timeout
     if outcome==0:
+      self.move_info_spec['game_state'] = self.get_game_state()
       self.move_info_spec['token_id'] = ""
       self.move_info_spec['from'] = ""
       self.move_info_spec['to'] = ""
@@ -186,6 +170,7 @@ class Game(object):
       self.move_info_spec['timeout'] = self.n_timeout_per_token
       self.add_info_spec_vect(self.move_info_spec)
     else:
+      self.move_info_spec['game_state'] = self.get_game_state()
       self.move_info_spec['token_id'] = self.detected_token[0]
       self.move_info_spec['from'] = self.detected_token[1]
       self.move_info_spec['to'] = self.detected_token[2]
