@@ -3,7 +3,7 @@ from board_state.msg import TokenMsg
 from board_state.msg import BoardMsg
 
 class Game(object):
-  def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective, with_SOCIABLE):
+  def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective, game_state, with_SOCIABLE):
     rospy.init_node('big_hero', anonymous=True)
     # subscriber for getting info from the board
     rospy.Subscriber("/detected_move", TokenMsg, self.get_move_event_callback)
@@ -24,6 +24,7 @@ class Game(object):
     self.outcome = 0
     self.width = board_size[0]
     self.height = board_size[1]
+    self.game_state = game_state
     #counters
     self.n_attempt_per_token = 1
     self.n_timeout_per_token = 0
@@ -205,6 +206,7 @@ class Game(object):
   def store_info_spec(self, outcome):
     #timeout
     if outcome==0:
+      self.move_info_spec['game_state'] = self.get_game_state()
       self.move_info_spec['token_id'] = ""
       self.move_info_spec['from'] = ""
       self.move_info_spec['to'] = ""
@@ -216,6 +218,7 @@ class Game(object):
       self.move_info_spec['timeout'] = self.n_timeout_per_token
       self.add_info_spec_vect(self.move_info_spec)
     else:
+      self.move_info_spec['game_state'] = self.get_game_state()  
       self.move_info_spec['token_id'] = self.detected_token[0]
       self.move_info_spec['from'] = self.detected_token[1]
       self.move_info_spec['to'] = self.detected_token[2]
@@ -229,6 +232,7 @@ class Game(object):
     return self.move_info_spec
 
   def store_info_gen(self):
+    self.move_info_gen['game_state'] = self.get_game_state()  
     self.move_info_gen['token_id'] = self.detected_token[0]
     self.move_info_gen['from'] = self.detected_token[1]
     self.move_info_gen['to'] = self.detected_token[2]
