@@ -411,7 +411,7 @@ def main():
   objective = rospy.get_param("/objective")
 
   # we create the game instance
-  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=20, objective=objective, with_SOCIABLE=with_SOCIABLE)
+  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=20, objective=objective, game_state={'beg':2, 'mid':4, 'end':5},with_SOCIABLE=with_SOCIABLE)
   # we create the robot instance
   speech = Speech(language)
   face = Face()
