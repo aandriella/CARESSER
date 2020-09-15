@@ -284,17 +284,25 @@ class StateMachine(enum.Enum):
       print("U_PICK")
       sm.CURRENT_STATE = sm.S_ROBOT_FEEDBACK
       detected_token, picked, _, _ = game.get_move_event()
+      speech_ended = True
+      robot.reset_speech_ended()
       while (not picked and (detected_token == ("",0,0))):
+        #check here if the speech has ended if so trigger the counter
+        if speech_ended and robot.has_speech_ended():
+          game.react_time_per_token_spec_t0 = time.time()
+          robot.reset_speech_ended()
+          speech_ended = False
         if check_move_timeout(game):
           detected_token, picked, _, _ = game.get_move_event()
         else:
           sm.b_user_reached_timeout = True
-          game.react_time_per_token_spec_t0 = time.time()
           return False
       #here we check if the robot is still moving if so stop it
       if robot.get_action_state() == 0:
-        game.react_time_per_token_spec_t0 = time.time()
+        #game.react_time_per_token_spec_t0 = time.time()
         robot.cancel_action()
+
+      #TODO try to merge these two if conditions together
       game.elapsed_time_per_token_spec_t0 = time.time()
       game.react_time_per_token_spec_t1 = time.time() - game.react_time_per_token_spec_t0
       game.react_time_per_token_gen_t1 += game.react_time_per_token_spec_t1
@@ -441,7 +449,7 @@ def main():
                     'elapsed_time': 'elapsed_time', 'attempt': 'attempt', 'timeout': 'timeout',
                     'sociable': 'sociable'}
 
-  entry_log_gen = {'token_id': 'token_id', 'from': 'from', 'to': 'to',
+  entry_log_gen = {'game_state':'game_state','token_id': 'token_id', 'from': 'from', 'to': 'to',
                       'avg_robot_assistance_per_move': 'avg_robot_assistance_per_move',
                       'cum_react_time': 'cum_react_time', 'cum_elapsed_time': 'cum_elapsed_time',
                       'attempt': 'attempt','timeout': 'timeout', 'sociable': 'sociable'}
