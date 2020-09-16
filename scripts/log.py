@@ -3,6 +3,8 @@ import os
 import datetime
 import csv
 import pandas as pd
+import pickle
+
 
 class Log():
 	def __init__(self, filename_spec, fieldnames_spec, filename_gen, fieldnames_gen, filename_sum, fieldnames_sum):
@@ -19,32 +21,75 @@ class Log():
 			writer.writerow(data)
 		csv_file.close()
 
-	def read_csv_file(self, log):
-		# making data frame from csv file
-		data = pd.read_csv(log)
+	def save_bn_matrix(self, file_name,  bn_dict_vars):
 
-		# replacing blank spaces with '_'
-		#data.columns = [column.replace(" ", "_") for column in data.columns]
+		# Saving the objects:
+		with open(file_name+'.pkl', 'wb') as handle:  # Python 3: open(..., 'wb')
+			pickle.dump(bn_dict_vars, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-		# filtering with query method
-		data.query('token_id =="17"  and '
-							 'from_=="15"',
-							 inplace = True)
-		# display
-		print(data)
+	def load_bn_matrix(self, file_name):
+		# Getting back the objects:
+		with open(file_name+'.pkl', 'rb') as handle:
+			bn_dict_vars = pickle.load(handle)
+
+		return bn_dict_vars
+
 
 
 
 def main():
-	variables = ['token_id', 'from', 'to', 'react_time', 'elapsed_time']
-	entries_value = {'token_id': 17, 'from': 15, 'to': 2, 'react_time': 1.23, 'elapsed_time': 5.02}
-	entries_name = {'token_id': 'token_id', 'from': 'from', 'to': 'to', 'react_time': 'react_time', 'elapsed_time': 'elapsed_time'}
+	entry_log_spec = {'game_state': 'game_state', 'token_id': 'token_id', 'from': 'from', 'to': 'to',
+										'caregiver_assistance': 'caregiver_assistance', "react_time": 'react_time',
+										'elapsed_time': 'elapsed_time', "attempt": 'attempt', "timeout": 'timeout', "sociable": 'sociable'}
 
+	entry_log_gen = {"token_id": 'token_id', "from": 'from', "to": 'to',
+									 "avg_caregiver_assistance_per_move": 'avg_caregiver_assistance_per_move',
+									 "cum_react_time": "cum_react_time", "cum_elapsed_time": "cum_elapsed_time", "attempt": "attempt",
+									 "timeout": "timeout", "sociable": "sociable"}
+	entry_log_summary = {"n_attempt": "n_attempt", "n_timeout": "n_timeout", "n_sociable": "n_sociable",
+											 "avg_lev_assistance": "avg_lev_assistance", "tot_react_time": "tot_react_time",
+											 "tot_elapsed_time": "tot_elapsed_time"}
+
+	file_spec = "" + "/log_spec.csv"
+	file_gen = "" + "/log_gen.csv"
+	file_summary = "" + "/log_summary.csv"
 	file = '/home/aandriella/pal/cognitive_game_ws/src/carf/caregiver_in_the_loop/log/csv.txt'
-	log = Log(file, fieldnames_spec=variables, fieldnames_gen=variables, fieldnames_sum=variables)
-	# log.add_row_entry(entries_name, log.fieldnames_spec)
-	# log.add_row_entry(entries_value, log.fieldnames_spec)
-	log.read_csv_file(file)
+	log = Log(filename_spec=file_spec, fieldnames_spec=entry_log_spec, filename_gen=file_gen,
+            fieldnames_gen=entry_log_gen, filename_sum=file_summary, fieldnames_sum=entry_log_summary)
+	# # log.add_row_entry(entries_name, log.fieldnames_spec)
+	# # log.add_row_entry(entries_value, log.fieldnames_spec)
+	# log.read_csv_file(file)
+	# attempt_counter_per_action = [0][0]
+	# game_state_counter_per_action = [0][0]
+ 	# caregiver_feedback_per_action = [0][0]
+	# caregiver_assistance_per_action = [0][0]
+	# attempt_counter_per_react_time = [0][0]
+	# game_state_counter_per_react_time = [0][0]
+	# robot_feedback_per_react_time = [0][0]
+	# robot_assistance_per_react_time = [0][0]
+	# game_state_counter_per_robot_assistance = [0][0]
+	# attempt_counter_per_robot_assistance = [0][0]
+	# game_state_counter_per_robot_feedback = [0][0]
+	# attempt_counter_per_robot_feedback = [0][0]
+	# bn_dict_vars = {'attempt_counter_per_action':attempt_counter_per_action,
+	# 								'game_state_counter_per_action':game_state_counter_per_action,
+	# 								'caregiver_feedback_per_action':caregiver_feedback_per_action,
+	# 								'caregiver_assistance_per_action':caregiver_assistance_per_action,
+	# 								'attempt_counter_per_react_time':attempt_counter_per_react_time,
+	# 								'game_state_counter_per_react_time':game_state_counter_per_react_time,
+	# 							 	'robot_feedback_per_react_time':robot_feedback_per_react_time,
+	# 								'robot_assistance_per_react_time':robot_assistance_per_react_time,
+	# 								'game_state_counter_per_robot_assistance':game_state_counter_per_robot_assistance,
+	# 								'attempt_counter_per_robot_assistance':attempt_counter_per_robot_assistance,
+	# 								'game_state_counter_per_robot_feedback':game_state_counter_per_robot_feedback,
+	# 								'attempt_counter_per_robot_feedback':attempt_counter_per_robot_feedback
+	# 		}
+  #
+	# #log.save_bn_matrix("/home/aandriella/pal/cognitive_game_ws/src/carf/caregiver_in_the_loop/log/12test", bn_dict_vars)
+
+	bn_dict_vars = log.load_bn_matrix("/home/aandriella/pal/cognitive_game_ws/src/carf/caregiver_in_the_loop/log/2/bn_matrix.pkl")
+
+	print(bn_dict_vars)
 
 if __name__ == "__main__":
 	main()
