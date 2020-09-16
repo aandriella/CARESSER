@@ -131,7 +131,7 @@ class StateMachine(enum.Enum):
 
     if game.moved_back:
       print("token has been moved back, DO nothing")
-      game.outcome = ""
+      game.outcome = -1
       self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
@@ -173,7 +173,7 @@ class StateMachine(enum.Enum):
         self.b_user_reached_max_attempt = True
         self.caregiver_move_correct_token(game)
 
-    self.b_robot_outcome_finished = True
+    self.b_caregiver_outcome_finished = True
     return self.b_caregiver_outcome_finished
 
   def caregiver_move_correct_token(self, game):
@@ -201,9 +201,9 @@ class StateMachine(enum.Enum):
 
   def user_move_back(self, game):
     # user moved the token in an incorrect location
-    # robot moved it back
+    # caregiver moved it back
     print("User moved back the token")
-    #success = robot.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1)
+    #success = caregiver.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1)
     # get the initial location of the placed token and move back there
     token_id, token_from, token_to = game.detected_token
     while (game.detected_token != (token_id, token_to, token_from)):
@@ -218,7 +218,7 @@ class StateMachine(enum.Enum):
      1.a check for timeout
         1.b timeout -> provide reengagement
         go back to 1
-     2. robot provides feedback
+     2. caregiver provides feedback
      3. user places a token
      3.a user places a token back
      3.b user places a token in a goal location
@@ -262,8 +262,8 @@ class StateMachine(enum.Enum):
       game.n_sociable_per_token += 1
       game.n_tot_sociable += 1
       sm.CURRENT_STATE = sm.S_USER_PLACE
-      sm.robot_provided_feeback_finished = True
-      return sm.robot_provided_feeback_finished
+      sm.caregiver_provided_feeback_finished = True
+      return sm.caregiver_provided_feeback_finished
 
     ''' When the user picked the token we check where they place it'''
     '''either they can place it back '''
@@ -341,10 +341,14 @@ class StateMachine(enum.Enum):
 def main():
   user_id = rospy.get_param("/user_id")
   objective = rospy.get_param("/objective")
-
   # we create the game instance
   game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4,
-              timeout=15, objective=objective, game_state={'beg':2, 'mid':4, 'end':5})
+              timeout=15, objective=objective,
+              bn_game_state={'beg': 2, 'mid': 4, 'end': 5}, bn_attempt={'att_1':0, 'att_2':1, 'att_3':2, 'att_4':3},
+              bn_caregiver_feedback={'no':0,'yes':1},
+              bn_caregiver_assistance={'lev_0':0,'lev_1':1,'lev_2':2,'lev_3':3,'lev_4':4,'lev_5':5},
+              bn_user_react_time={'fast': 5, 'medium': 10, 'slow': 15},
+              bn_user_action={'correct': 0, 'wrong': 1, 'timeout': 2})
 
   #user_id = raw_input("please, insert the id of the user:")
   path = os.path.abspath(__file__)
@@ -363,12 +367,13 @@ def main():
   file_spec = path_name + "/log_spec.csv"
   file_gen = path_name + "/log_gen.csv"
   file_summary = path_name + "/log_summary.csv"
+  bn_file = path_name + "/bn_matrix.pkl"
 
   entry_log_spec = {'game_state':'game_state', 'token_id':'token_id', 'from':'from', 'to':'to',
-                    'robot_assistance':'robot_assistance', "react_time":'react_time',
+                    'caregiver_assistance':'caregiver_assistance', "react_time":'react_time',
                     'elapsed_time':'elapsed_time', "attempt":'attempt', "timeout":'timeout', "sociable":'sociable'}
 
-  entry_log_gen = {"token_id":'token_id', "from":'from', "to":'to', "avg_robot_assistance_per_move":'avg_robot_assistance_per_move',
+  entry_log_gen = {"token_id":'token_id', "from":'from', "to":'to', "avg_caregiver_assistance_per_move":'avg_caregiver_assistance_per_move',
                   "cum_react_time":"cum_react_time", "cum_elapsed_time":"cum_elapsed_time", "attempt":"attempt",
                   "timeout":"timeout", "sociable":"sociable"}
   entry_log_summary = {"n_attempt":"n_attempt", "n_timeout":"n_timeout", "n_sociable":"n_sociable",
@@ -388,7 +393,7 @@ def main():
 
     if sm.CURRENT_STATE.value == sm.S_CAREGIVER_ASSIST.value:
       sm.caregiver_provide_assistance()
-      game.avg_robot_assistance_per_move += game.robot_assistance
+      game.avg_caregiver_assistance_per_move += game.caregiver_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
       print("Expected token ", game.solution[game.get_n_correct_move()])
@@ -415,6 +420,8 @@ def main():
 
   entry_log = game.store_info_summary()
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log)
+  log.save_bn_matrix(file_name=bn_file, bn_dict_vars=game.bn_dict_vars)
+
 
   for instance_spec in game.move_info_spec_vect:
     print(instance_spec)
