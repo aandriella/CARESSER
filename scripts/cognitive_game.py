@@ -5,7 +5,10 @@ from board_state.msg import BoardMsg
 
 class Game(object):
   def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective,
-               game_state):
+               bn_game_state, bn_attempt, bn_caregiver_feedback, bn_caregiver_assistance,
+               bn_user_react_time, bn_user_action
+               ):
+
     rospy.init_node('big_hero', anonymous=True)
     # subscriber for getting info from the board
     rospy.Subscriber("/detected_move", TokenMsg, self.get_move_event_callback)
@@ -20,12 +23,12 @@ class Game(object):
     self.n_max_attempt_per_token = n_max_attempt_per_token
     self.solution = self.set_objective(self.task_length)
     self.timeout = timeout
-    self.robot_assistance = 0
-    self.avg_robot_assistance_per_move = 0
+    self.caregiver_assistance = 0
+    self.robot_feedback = 0
+    self.avg_caregiver_assistance_per_move = 0
     self.outcome = 0
     self.width = board_size[0]
     self.height = board_size[1]
-    self.game_state = game_state
     #counters
     self.n_attempt_per_token = 1
     self.n_timeout_per_token = 0
@@ -56,24 +59,86 @@ class Game(object):
     self.move_info_summary_vect = list()
 
     #TODO For the BN Simulator, initialise this variable according to the simulator
-    # self.caregiver_assistance_per_action = [][]
-    # self.caregiver_feedback_per_action = [][]
-    # self.game_state_per_action = [][]
-    # self.attempt_per_action = [][]
-    # self.caregiver_assistance_per_action = [][]
-    # self.caregiver_feedback_per_action = [][]
-    # self.game_state_per_action = [][]
-    # self.attempt_per_action = [][]
+    self.bn_user_action = bn_user_action
+    self.bn_user_react_time = bn_user_react_time
+    self.bn_game_state = bn_game_state
+    self.bn_attempt = bn_attempt
+    self.bn_caregiver_feedback = bn_caregiver_feedback
+    self.bn_caregiver_assistance = bn_caregiver_assistance
 
-  def get_game_state(self):
+
+    self.attempt_counter_per_action = [[0 for i in range(len(self.bn_attempt.values()))] for j in range(len(self.bn_user_action.values()))]
+    self.game_state_counter_per_action = [[0 for i in range(len(self.bn_game_state.values()))] for j in
+                                     range(len(self.bn_user_action.values()))]
+    self.caregiver_feedback_per_action = [[0 for i in range(len(self.bn_caregiver_feedback.values()))] for j in
+                                 range(len(self.bn_user_action.values()))]
+    self.caregiver_assistance_per_action = [[0 for i in range(len(self.bn_caregiver_assistance.values()))] for j in
+                                   range(len(self.bn_user_action.values()))]
+
+    self.attempt_counter_per_react_time = [[0 for i in range(len(self.bn_attempt.values()))] for j in
+                                      range(len(self.bn_user_react_time.values()))]
+    self.game_state_counter_per_react_time = [[0 for i in range(len(self.bn_game_state.values()))] for j in
+                                         range(len(self.bn_user_react_time.values()))]
+    self.caregiver_feedback_per_react_time = [[0 for i in range(len(self.bn_caregiver_feedback.values()))] for j in
+                                     range(len(self.bn_user_react_time.values()))]
+    self.caregiver_assistance_per_react_time = [[0 for i in range(len(self.bn_caregiver_assistance.values()))] for j in
+                                       range(len(self.bn_user_react_time.values()))]
+
+    self.game_state_counter_per_caregiver_assistance = [[0 for i in range(len(self.bn_game_state.values()))] for j in
+                                               range(len(self.bn_caregiver_assistance.values()))]
+    self.attempt_counter_per_caregiver_assistance = [[0 for i in range(len(self.bn_attempt.values()))] for j in
+                                            range(len(self.bn_caregiver_assistance.values()))]
+
+    self.game_state_counter_per_caregiver_feedback = [[0 for i in range(len(self.bn_game_state.values()))] for j in
+                                             range(len(self.bn_caregiver_feedback.values()))]
+    self.attempt_counter_per_caregiver_feedback = [[0 for i in range(len(self.bn_attempt.values()))] for j in
+                                          range(len(self.bn_caregiver_feedback.values()))]
+
+    self.bn_dict_vars = {'attempt_counter_per_action':self.attempt_counter_per_action,
+									'game_state_counter_per_action':self.game_state_counter_per_action,
+									'caregiver_feedback_per_action':self.caregiver_feedback_per_action,
+									'caregiver_assistance_per_action':self.caregiver_assistance_per_action,
+									'attempt_counter_per_react_time':self.attempt_counter_per_react_time,
+									'game_state_counter_per_react_time':self.game_state_counter_per_react_time,
+								 	'caregiver_feedback_per_react_time':self.caregiver_feedback_per_react_time,
+									'caregiver_assistance_per_react_time':self.caregiver_assistance_per_react_time,
+									'game_state_counter_per_caregiver_assistance':self.game_state_counter_per_caregiver_assistance,
+									'attempt_counter_per_caregiver_assistance':self.attempt_counter_per_caregiver_assistance,
+									'game_state_counter_per_caregiver_feedback':self.game_state_counter_per_caregiver_feedback,
+									'attempt_counter_per_caregiver_feedback':self.attempt_counter_per_caregiver_feedback}
+
+  def map_user_action(self, outcome):
+    if outcome == -1:
+      return self.bn_user_action['wrong']
+    elif outcome == 0:
+      return self.bn_user_action['timeout']
+    elif outcome == 1:
+      return self.bn_user_action['correct']
+
+  def map_react_time(self):
+    '''
+    discretise the react time in 3 bins [slow, normal, fast] 0, 1, 2
+    Args:
+
+    Return:
+      0 if slow 1 if normal 2 if fast
+    '''
+    if self.react_time_per_token_spec_t1>0 and self.react_time_per_token_spec_t1<self.bn_user_react_time['fast']:
+      return 2
+    elif self.react_time_per_token_spec_t1>=self.bn_user_react_time['fast'] and self.react_time_per_token_spec_t1<self.bn_user_react_time['normal']:
+      return 1
+    elif self.react_time_per_token_spec_t1 >= self.bn_user_react_time['normal']:
+      return 0
+
+  def map_game_state(self):
     '''
     get the game state : BEG, MIDDLE and END
     Return:
     the id of the game state
     '''
-    if self.n_correct_move<self.game_state['beg']:
+    if self.n_correct_move<self.bn_game_state['beg']:
       return 0
-    elif self.n_correct_move>=self.game_state['beg'] and self.n_correct_move<self.game_state['mid']:
+    elif self.n_correct_move>=self.bn_game_state['beg'] and self.n_correct_move<self.bn_game_state['mid']:
       return 1
     else:
       return 2
@@ -155,14 +220,15 @@ class Game(object):
   def add_info_spec_vect(self, dict):
     self.move_info_spec_vect.append(dict.copy())
 
+
   def store_info_spec(self, outcome):
     #timeout
     if outcome==0:
-      self.move_info_spec['game_state'] = self.get_game_state()
+      self.move_info_spec['game_state'] = self.map_game_state()
       self.move_info_spec['token_id'] = ""
       self.move_info_spec['from'] = ""
       self.move_info_spec['to'] = ""
-      self.move_info_spec['robot_assistance'] = self.robot_assistance
+      self.move_info_spec['caregiver_assistance'] = self.caregiver_assistance
       self.move_info_spec['react_time'] = self.timeout
       self.move_info_spec['elapsed_time'] = 0
       self.move_info_spec['attempt'] = self.n_attempt_per_token
@@ -170,25 +236,42 @@ class Game(object):
       self.move_info_spec['timeout'] = self.n_timeout_per_token
       self.add_info_spec_vect(self.move_info_spec)
     else:
-      self.move_info_spec['game_state'] = self.get_game_state()
+      self.move_info_spec['game_state'] = self.map_game_state()
       self.move_info_spec['token_id'] = self.detected_token[0]
       self.move_info_spec['from'] = self.detected_token[1]
       self.move_info_spec['to'] = self.detected_token[2]
-      self.move_info_spec['robot_assistance'] = self.robot_assistance
+      self.move_info_spec['caregiver_assistance'] = self.caregiver_assistance
       self.move_info_spec['react_time'] = round(self.react_time_per_token_spec_t1, 3)
       self.move_info_spec['elapsed_time'] = round(self.elapsed_time_per_token_spec_t1, 3)
       self.move_info_spec['attempt'] = self.n_attempt_per_token
       self.move_info_spec['sociable'] = self.n_sociable_per_token
       self.move_info_spec['timeout'] = self.n_timeout_per_token
       self.add_info_spec_vect(self.move_info_spec)
+
+    self.attempt_counter_per_action[self.map_user_action(outcome)][self.n_attempt_per_token-1] += 1
+    self.game_state_counter_per_action[self.map_user_action(outcome)][self.map_game_state()] += 1
+    self.caregiver_feedback_per_action[self.map_user_action(outcome)][self.robot_feedback] += 1
+    self.caregiver_assistance_per_action[self.map_user_action(outcome)][self.caregiver_assistance] += 1
+
+    self.attempt_counter_per_react_time[self.map_react_time()][self.n_attempt_per_token-1] += 1
+    self.game_state_counter_per_react_time[self.map_react_time()][self.map_game_state()] += 1
+    self.caregiver_feedback_per_react_time[self.map_react_time()][self.robot_feedback] += 1
+    self.caregiver_assistance_per_react_time[self.map_react_time()][self.caregiver_assistance] += 1
+
+    self.game_state_counter_per_caregiver_assistance[self.caregiver_assistance][self.map_game_state()] += 1
+    self.attempt_counter_per_caregiver_assistance[self.caregiver_assistance][self.n_attempt_per_token-1] += 1
+    self.game_state_counter_per_caregiver_feedback[self.robot_feedback][self.map_game_state()] += 1
+    self.attempt_counter_per_caregiver_feedback[self.robot_feedback][self.n_attempt_per_token-1] += 1
+
+
     return self.move_info_spec
 
   def store_info_gen(self):
     self.move_info_gen['token_id'] = self.detected_token[0]
     self.move_info_gen['from'] = self.detected_token[1]
     self.move_info_gen['to'] = self.detected_token[2]
-    self.move_info_gen['avg_robot_assistance_per_move'] = round(
-      self.avg_robot_assistance_per_move / self.n_attempt_per_token, 3)
+    self.move_info_gen['avg_caregiver_assistance_per_move'] = round(
+      self.avg_caregiver_assistance_per_move / self.n_attempt_per_token, 3)
     self.move_info_gen['cum_react_time'] = round(self.react_time_per_token_gen_t1, 3)
     self.move_info_gen['cum_elapsed_time'] = round(self.elapsed_time_per_token_gen_t1, 3)
     self.move_info_gen['attempt'] = self.n_attempt_per_token
@@ -204,7 +287,7 @@ class Game(object):
     self.move_info_summary["n_timeout"] = sum([elem['timeout'] for elem in self.move_info_gen_vect])
     self.move_info_summary["n_sociable"] = sum([elem['sociable'] for elem in self.move_info_gen_vect])
     self.move_info_summary["avg_lev_assistance"] = sum(
-      [elem['avg_robot_assistance_per_move'] for elem in self.move_info_gen_vect]) / self.task_length
+      [elem['avg_caregiver_assistance_per_move'] for elem in self.move_info_gen_vect]) / self.task_length
     self.move_info_summary["tot_react_time"] = sum([elem['cum_react_time'] for elem in self.move_info_gen_vect])
     self.move_info_summary["tot_elapsed_time"] = sum([elem['cum_elapsed_time'] for elem in self.move_info_gen_vect])
     return self.move_info_summary
@@ -214,7 +297,7 @@ class Game(object):
     self.react_time_per_token_spec_t0 = 0
     self.elapsed_time_per_token_spec_t1 = 0
     self.elapsed_time_per_token_spec_t0 = 0
-    self.avg_robot_assistance_per_move = 0
+    self.avg_caregiver_assistance_per_move = 0
 
   def reset_counters_gen(self):
     self.react_time_per_token_gen_t1 = 0
