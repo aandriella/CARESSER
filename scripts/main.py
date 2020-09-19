@@ -369,13 +369,13 @@ def main():
   file_summary = path_name + "/log_summary.csv"
   bn_file = path_name + "/bn_matrix.pkl"
 
-  entry_log_spec = {'game_state':'game_state', 'token_id':'token_id', 'from':'from', 'to':'to',
+  entry_log_spec = {'game_state':'game_state', 'user_react_time':'user_react_time', 'user_action':'user_action', 'token_id':'token_id', 'from':'from', 'to':'to',
                     'caregiver_assistance':'caregiver_assistance', "react_time":'react_time',
-                    'elapsed_time':'elapsed_time', "attempt":'attempt', "timeout":'timeout', "sociable":'sociable'}
+                    'elapsed_time':'elapsed_time', "attempt":'attempt', "timeout":'timeout', "caregiver_feedback":'caregiver_feedback'}
 
-  entry_log_gen = {"token_id":'token_id', "from":'from', "to":'to', "avg_caregiver_assistance_per_move":'avg_caregiver_assistance_per_move',
+  entry_log_gen = {"token_id":'token_id', 'user_action':'user_action', "from":'from', "to":'to', "avg_caregiver_assistance_per_move":'avg_caregiver_assistance_per_move',
                   "cum_react_time":"cum_react_time", "cum_elapsed_time":"cum_elapsed_time", "attempt":"attempt",
-                  "timeout":"timeout", "sociable":"sociable"}
+                  "timeout":"timeout", "caregiver_feedback":"caregiver_feedback"}
   entry_log_summary = {"n_attempt":"n_attempt", "n_timeout":"n_timeout", "n_sociable":"n_sociable",
                        "avg_lev_assistance":"avg_lev_assistance", "tot_react_time":"tot_react_time",
                        "tot_elapsed_time":"tot_elapsed_time"}
