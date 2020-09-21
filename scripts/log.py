@@ -56,47 +56,47 @@ class Log():
 
     #game_state given assistance
     for i in range(n_game_state):
-      query_game_state = (data[data.game_state == i].head())
+      query_game_state = (data[data.game_state == i])
       for j in range(len(query_game_state.caregiver_assistance.values)):
         val = (query_game_state.caregiver_assistance.values[j])
         game_state_counter_per_caregiver_assistance[val][i] += 1
     #attempt given assistance
     for i in range(n_attempt):
-      query_attempt = (data[data.attempt==i+1].head())
+      query_attempt = (data[data.attempt==i+1])
       for j in range(len(query_attempt.caregiver_assistance.values)):
         val = (query_attempt.caregiver_assistance.values[j])
         attempt_counter_per_caregiver_assistance[val][i] += 1
     #game state given feedback
     for i in range(n_game_state):
-      query_game_state = (data[data.game_state == i].head())
+      query_game_state = (data[data.game_state == i])
       for j in range(len(query_game_state.caregiver_feedback.values)):
         val = (query_game_state.caregiver_feedback.values[j])
         game_state_counter_per_caregiver_feedback[val][i] += 1
     #attempt given feedback
     for i in range(n_attempt):
-      query_attempt = (data[data.attempt == i+1].head())
+      query_attempt = (data[data.attempt == i+1])
       for j in range(len(query_attempt.caregiver_feedback.values)):
         val = (query_attempt.caregiver_feedback.values[j])
         attempt_counter_per_caregiver_feedback[val][i] += 1
 
     for i in range(n_assistance):
-      query_assistance = (data[data.caregiver_assistance == i].head())
+      query_assistance = (data[data.caregiver_assistance == i])
       for j in range(len(query_assistance.user_action)):
         val = (query_assistance.user_action.values[j])
         caregiver_assistance_per_action[val][i] += 1
     for i in range(n_feedback):
-      query_feedback = (data[data.caregiver_feedback == i].head())
+      query_feedback = (data[data.caregiver_feedback == i])
       for j in range(len(query_feedback.user_action)):
         val = (query_feedback.user_action.values[j])
         caregiver_feedback_per_action[val][i] += 1
 
     for i in range(n_assistance):
-      query_assistance = (data[data.caregiver_assistance == i].head())
+      query_assistance = (data[data.caregiver_assistance == i])
       for j in range(len(query_assistance.user_react_time)):
         val = (query_assistance.user_react_time.values[j])
         caregiver_assistance_per_react_time[val][i] += 1
     for i in range(n_feedback):
-      query_feedback = (data[data.caregiver_feedback == i].head())
+      query_feedback = (data[data.caregiver_feedback == i])
       for j in range(len(query_feedback.user_react_time)):
         val = (query_feedback.user_react_time.values[j])
         caregiver_feedback_per_react_time[val][i] += 1
@@ -167,8 +167,8 @@ def main():
 
   # bn_dict_vars = log.load_bn_matrix("/home/aandriella/pal/cognitive_game_ws/src/carf/caregiver_in_the_loop/log/2/bn_matrix.pkl")
   # print(bn_dict_vars)
-  filename = "/home/aandriella/pal/cognitive_game_ws/src/carf/caregiver_in_the_loop/log/3/log_spec.csv"
-  bn_filename = "/home/aandriella/pal/cognitive_game_ws/src/carf/caregiver_in_the_loop/log/0/bn_matrix.pkl"
+  filename = "/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/3/log_spec.csv"
+  bn_filename = "/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/3/bn_matrix.pkl"
   bn_matrix = log.query_csv_file(bn_matrix_filename=bn_filename, filename=filename, n_game_state=3, n_attempt=4, n_feedback=2, n_assistance=6, n_react_time=3, n_user_action=3)
   print(bn_matrix)
 
