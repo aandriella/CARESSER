@@ -34,8 +34,10 @@ class Log():
 
     return bn_dict_vars
 
-  def query_csv_file(self, bn_matrix_filename, filename, n_game_state, n_attempt, n_feedback, n_assistance, n_react_time, n_user_action):
-    data = pd.read_csv(filename)
+  def query_csv_file(self, bn_belief_user_action_filename, bn_belief_user_react_time_filename,
+                     bn_belief_caregiver_assistance_filename, bn_belief_caregiver_feedback_filename,
+                     log_filename, n_game_state, n_attempt, n_feedback, n_assistance, n_react_time, n_user_action):
+    data = pd.read_csv(log_filename)
 
     caregiver_feedback_per_action = [[0 for i in range(n_feedback)] for j in
                                           range(n_user_action)]
@@ -101,18 +103,25 @@ class Log():
         val = (query_feedback.user_react_time.values[j])
         caregiver_feedback_per_react_time[val][i] += 1
 
-    bn_matrix = self.load_bn_matrix(bn_matrix_filename)
-    bn_matrix['caregiver_feedback_per_action'] = caregiver_feedback_per_action
-    bn_matrix['caregiver_assistance_per_action'] = caregiver_assistance_per_action
-    bn_matrix['caregiver_feedback_per_react_time'] = caregiver_feedback_per_react_time
-    bn_matrix['caregiver_assistance_per_react_time'] = caregiver_assistance_per_react_time
-    bn_matrix['game_state_counter_per_caregiver_assistance'] = game_state_counter_per_caregiver_assistance
-    bn_matrix['game_state_counter_per_caregiver_feedback'] = game_state_counter_per_caregiver_feedback
-    bn_matrix['attempt_counter_per_caregiver_assistance'] = attempt_counter_per_caregiver_assistance
-    bn_matrix['attempt_counter_per_caregiver_feedback'] = attempt_counter_per_caregiver_feedback
+    bn_belief_user_action = self.load_bn_matrix(bn_belief_user_action_filename)
+    bn_belief_user_react_time = self.load_bn_matrix(bn_belief_user_react_time_filename)
+    bn_belief_caregiver_assistance = self.load_bn_matrix(bn_belief_caregiver_assistance_filename)
+    bn_belief_caregiver_feedback = self.load_bn_matrix(bn_belief_caregiver_feedback_filename)
+
+    bn_belief_user_action['caregiver_feedback_per_action'] = caregiver_feedback_per_action
+    bn_belief_user_action['caregiver_assistance_per_action'] = caregiver_assistance_per_action
+
+    bn_belief_user_react_time['caregiver_feedback_per_react_time'] = caregiver_feedback_per_react_time
+    bn_belief_user_react_time['caregiver_assistance_per_react_time'] = caregiver_assistance_per_react_time
+
+    bn_belief_caregiver_assistance['game_state_counter_per_caregiver_assistance'] = game_state_counter_per_caregiver_assistance
+    bn_belief_caregiver_assistance['attempt_counter_per_caregiver_assistance'] = attempt_counter_per_caregiver_assistance
+
+    bn_belief_caregiver_feedback['game_state_counter_per_caregiver_feedback'] = game_state_counter_per_caregiver_feedback
+    bn_belief_caregiver_feedback['attempt_counter_per_caregiver_feedback'] = attempt_counter_per_caregiver_feedback
 
     print("Good job")
-    return bn_matrix
+    return bn_belief_user_action, bn_belief_user_react_time, bn_belief_caregiver_assistance, bn_belief_caregiver_feedback
 
 
 
@@ -167,10 +176,22 @@ def main():
 
   # bn_dict_vars = log.load_bn_matrix("/home/aandriella/pal/cognitive_game_ws/src/carf/caregiver_in_the_loop/log/2/bn_matrix.pkl")
   # print(bn_dict_vars)
-  filename = "/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/3/log_spec.csv"
-  bn_filename = "/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/3/bn_matrix.pkl"
-  bn_matrix = log.query_csv_file(bn_matrix_filename=bn_filename, filename=filename, n_game_state=3, n_attempt=4, n_feedback=2, n_assistance=6, n_react_time=3, n_user_action=3)
-  print(bn_matrix)
+  log_filename = "/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/6/log_spec.csv"
+  bn_belief_user_action_filename = "/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/6/bn_belief_user_action.pkl"
+  bn_belief_user_react_time_filename = "/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/6/bn_belief_user_react_time.pkl"
+  bn_belief_caregiver_assistance_filename = "/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/6/bn_belief_caregiver_assistive_action.pkl"
+  bn_belief_caregiver_feedback_filename = "/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/6/bn_belief_caregiver_feedback_action.pkl"
+
+  bn_belief_user_action, bn_belief_user_react_time, bn_belief_caregiver_assistance, bn_belief_caregiver_feedback  =\
+    log.query_csv_file(bn_belief_user_action_filename = bn_belief_user_action_filename,
+                                 bn_belief_user_react_time_filename = bn_belief_user_react_time_filename,
+                                 bn_belief_caregiver_assistance_filename = bn_belief_caregiver_assistance_filename,
+                                 bn_belief_caregiver_feedback_filename = bn_belief_caregiver_feedback_filename,
+                                 log_filename=log_filename, n_game_state=3, n_attempt=4, n_feedback=2, n_assistance=6, n_react_time=3, n_user_action=3)
+  print(bn_belief_user_action)
+  print(bn_belief_user_react_time)
+  print(bn_belief_caregiver_assistance)
+  print(bn_belief_caregiver_feedback)
 
 
 if __name__ == "__main__":
