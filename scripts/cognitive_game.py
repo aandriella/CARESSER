@@ -94,18 +94,19 @@ class Game(object):
     self.attempt_counter_per_caregiver_feedback = [[0 for i in range(len(self.bn_attempt.values()))] for j in
                                           range(len(self.bn_caregiver_feedback.values()))]
 
-    self.bn_dict_vars = {'attempt_counter_per_action':self.attempt_counter_per_action,
-									'game_state_counter_per_action':self.game_state_counter_per_action,
-									'caregiver_feedback_per_action':self.caregiver_feedback_per_action,
-									'caregiver_assistance_per_action':self.caregiver_assistance_per_action,
-									'attempt_counter_per_react_time':self.attempt_counter_per_react_time,
-									'game_state_counter_per_react_time':self.game_state_counter_per_react_time,
-								 	'caregiver_feedback_per_react_time':self.caregiver_feedback_per_react_time,
-									'caregiver_assistance_per_react_time':self.caregiver_assistance_per_react_time,
-									'game_state_counter_per_caregiver_assistance':self.game_state_counter_per_caregiver_assistance,
-									'attempt_counter_per_caregiver_assistance':self.attempt_counter_per_caregiver_assistance,
-									'game_state_counter_per_caregiver_feedback':self.game_state_counter_per_caregiver_feedback,
-									'attempt_counter_per_caregiver_feedback':self.attempt_counter_per_caregiver_feedback}
+    self.bn_dict_vars_user_action = {'attempt':self.attempt_counter_per_action,
+						 'game_state':self.game_state_counter_per_action,
+						 'agent_feedback':self.caregiver_feedback_per_action,
+						 'agent_assistance':self.caregiver_assistance_per_action}
+
+    self.bn_dict_vars_user_react_time = {'attempt':self.attempt_counter_per_react_time,
+						 'game_state':self.game_state_counter_per_react_time,
+						 'agent_feedback':self.caregiver_feedback_per_react_time,
+						 'agent_assistance':self.caregiver_assistance_per_react_time}
+    self.bn_dict_vars_caregiver_assistance = {'game_state':self.game_state_counter_per_caregiver_assistance,
+						 'attempt':self.attempt_counter_per_caregiver_assistance}
+    self.bn_dict_vars_caregiver_feedback = {'game_state':self.game_state_counter_per_caregiver_feedback,
+						'attempt':self.attempt_counter_per_caregiver_feedback}
 
   def map_user_action(self, outcome):
     if outcome == -1:
