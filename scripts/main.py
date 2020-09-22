@@ -347,7 +347,7 @@ def main():
               bn_game_state={'beg': 2, 'mid': 4, 'end': 5}, bn_attempt={'att_1':0, 'att_2':1, 'att_3':2, 'att_4':3},
               bn_caregiver_feedback={'no':0,'yes':1},
               bn_caregiver_assistance={'lev_0':0,'lev_1':1,'lev_2':2,'lev_3':3,'lev_4':4,'lev_5':5},
-              bn_user_react_time={'fast': 5, 'medium': 10, 'slow': 15},
+              bn_user_react_time={'fast': 5, 'normal': 10, 'slow': 15},
               bn_user_action={'correct': 0, 'wrong': 1, 'timeout': 2})
 
   #user_id = raw_input("please, insert the id of the user:")
@@ -367,7 +367,10 @@ def main():
   file_spec = path_name + "/log_spec.csv"
   file_gen = path_name + "/log_gen.csv"
   file_summary = path_name + "/log_summary.csv"
-  bn_file = path_name + "/bn_matrix.pkl"
+  bn_belief_user_action_file = path_name + "/bn_belief_user_action.pkl"
+  bn_belief_user_react_time_file = path_name + "/bn_belief_user_react_time.pkl"
+  bn_belief_caregiver_assistive_action = path_name + "/bn_belief_caregiver_assistive_action.pkl"
+  bn_belief_caregiver_feedback_action = path_name + "/bn_belief_caregiver_feedback_action.pkl"
 
   entry_log_spec = {'game_state':'game_state', 'user_react_time':'user_react_time', 'user_action':'user_action', 'token_id':'token_id', 'from':'from', 'to':'to',
                     'caregiver_assistance':'caregiver_assistance', "react_time":'react_time',
@@ -420,8 +423,10 @@ def main():
 
   entry_log = game.store_info_summary()
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log)
-  log.save_bn_matrix(file_name=bn_file, bn_dict_vars=game.bn_dict_vars)
-
+  log.save_bn_matrix(file_name=bn_belief_user_action_file, bn_dict_vars=game.bn_dict_vars_user_action)
+  log.save_bn_matrix(file_name=bn_belief_user_react_time_file, bn_dict_vars=game.bn_dict_vars_user_action)
+  log.save_bn_matrix(file_name=bn_belief_caregiver_assistive_action, bn_dict_vars=game.bn_dict_vars_caregiver_assistance)
+  log.save_bn_matrix(file_name=bn_belief_caregiver_feedback_action, bn_dict_vars=game.bn_dict_vars_caregiver_feedback)
 
   for instance_spec in game.move_info_spec_vect:
     print(instance_spec)
