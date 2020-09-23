@@ -203,7 +203,7 @@ class StateMachine(enum.Enum):
     # user moved the token in an incorrect location
     # caregiver moved it back
     print("User moved back the token")
-    #success = caregiver.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1)
+    #success = caregiver.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1a)
     # get the initial location of the placed token and move back there
     token_id, token_from, token_to = game.detected_token
     while (game.detected_token != (token_id, token_to, token_from)):
@@ -214,10 +214,10 @@ class StateMachine(enum.Enum):
 
   def user_action(self, game):
     '''user action state has been divided in three sub methods:
-     1. user pick a token
-     1.a check for timeout
-        1.b timeout -> provide reengagement
-        go back to 1
+     1a. user pick a token
+     1a.a check for timeout
+        1a.b timeout -> provide reengagement
+        go back to 1a
      2. caregiver provides feedback
      3. user places a token
      3.a user places a token back
@@ -228,7 +228,7 @@ class StateMachine(enum.Enum):
     def check_move_timeout(game):
       '''we need to check if the computed time (react+elapsed) is smaller than timeout
       if not, we need to trigger different actions:
-      1. if the user has not picked a token (re-engage)
+      1a. if the user has not picked a token (re-engage)
       2. if the user has picked a token, ask her to move it back
       '''
       current_time = time.time()
@@ -270,7 +270,7 @@ class StateMachine(enum.Enum):
 
     def user_place(sm, game):
       '''user place has been divided into:
-         1. user places a token back
+         1a. user places a token back
          2. user places a token in a solution row
       '''
       print("U_PLACE")
@@ -340,7 +340,11 @@ class StateMachine(enum.Enum):
 
 def main():
   user_id = rospy.get_param("/user_id")
+  session_id = rospy.get_param("/session_id")
+  with_feedback = rospy.get_param("/with_feedback")
   objective = rospy.get_param("/objective")
+
+
   # we create the game instance
   game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4,
               timeout=15, objective=objective,
@@ -354,15 +358,13 @@ def main():
   path = os.path.abspath(__file__)
   dir_path = os.path.dirname(path)
   parent_dir_of_file = os.path.dirname(dir_path)
-  path_name = parent_dir_of_file + "/caregiver_in_the_loop/log/" + str(user_id)
+  path_name = parent_dir_of_file + "/caregiver_in_the_loop/log/" + str(user_id)+"/"+str(with_feedback)+"/"+str(session_id)
 
   if not os.path.exists(path_name):
     os.makedirs(path_name)
   else:
-    user_id = raw_input("The folder already exists, please remove it or create a new one:")
-    path_name = parent_dir_of_file + "/caregiver_in_the_loop/log/" + user_id
-    if not os.path.exists(path_name):
-      os.makedirs(path_name)
+    assert "Error the directory already exists"
+    exit(0)
 
   file_spec = path_name + "/log_spec.csv"
   file_gen = path_name + "/log_gen.csv"
@@ -401,7 +403,7 @@ def main():
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
       print("Expected token ", game.solution[game.get_n_correct_move()])
       time_to_act = time.time()
-      #game.with_SOCIABLE = random.randint(0,1)
+      #game.with_SOCIABLE = random.randint(0,1a)
       sm.user_action(game)
       game.total_elapsed_time += time.time() - time_to_act
 
