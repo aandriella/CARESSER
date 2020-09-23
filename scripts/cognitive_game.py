@@ -179,8 +179,8 @@ class Game(object):
     board_ = self.current_board[:]
     #remove the empty cells from the current_board
     board_filtered = list(filter(lambda x: x!="0", board_))
-    even_number_list = [num for num in board_filtered if num % 2 == 0]
-    odd_number_list = [num for num in board_filtered if num % 2 == 0]
+    even_number_list = [str(num) for num in board_filtered if int(num) % 2 == 0]
+    odd_number_list = [str(num) for num in board_filtered if int(num) % 2 != 0]
     if self.objective == "ascending":
       self.solution = sorted(board_filtered)[:n_token]
     elif self.objective == "ascending_even":
@@ -188,11 +188,11 @@ class Game(object):
     elif self.objective == "ascending_odd":
       self.solution = sorted(odd_number_list)[:n_token]
     elif self.objective == "descending":
-      self.solution = sorted(board_filtered, reverse=False)[:n_token]
+      self.solution = sorted(board_filtered, reverse=True)[:n_token]
     elif self.objective == "descending_even":
-      self.solution = sorted(even_number_list, reverse=False)[:n_token]
+      self.solution = sorted(even_number_list, reverse=True)[:n_token]
     elif self.objective == "descending_odd":
-      self.solution = sorted(odd_number_list, reverse=False)[:n_token]
+      self.solution = sorted(odd_number_list, reverse=True)[:n_token]
     else:
       assert("Game is not defined contact the developer for integrating it")
       exit(-1)
