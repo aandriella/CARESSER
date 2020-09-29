@@ -61,13 +61,16 @@ class StateMachine(enum.Enum):
        True when the action has been completed
     '''
 
+    if robot.get_action_state() == 0:
+      robot.cancel_action()
+
     print("R_ASSISTANCE")
     #recall all the information you may need for providing assistance
     token_sol = game.get_token_sol()
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
-    delay_for_speech = 2
-    game.robot_assistance = 2#random.randint(0, 5)
+    delay_for_speech = 1
+    game.robot_assistance = 5#random.randint(0, 5)
     success = robot.action["assistance"].__call__(lev_id=game.robot_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset, delay_for_speech=delay_for_speech)
 
     self.b_robot_assist_finished = True
@@ -200,8 +203,8 @@ class StateMachine(enum.Enum):
       robot.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
       self.CURRENT_STATE = self.S_ROBOT_MOVE_TOKEN_BACK
       #if robot replace with
-      self.robot_move_back(game, robot)
-      #self.user_move_back(game, robot)
+      #self.robot_move_back(game, robot)
+      self.user_move_back(game, robot)
 
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
