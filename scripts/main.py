@@ -410,7 +410,7 @@ def main():
   sentences_file = ""
   if language == "en_GB":
     sentences_file = config_path+"/sentences_"+language
-  elif language == "es":
+  elif language == "es_ES":
     sentences_file =  config_path+"/sentences_"+language
   elif language == "cat":
     sentences_file =  config_path+"/sentences_"+language
