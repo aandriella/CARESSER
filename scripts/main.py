@@ -64,13 +64,17 @@ class StateMachine(enum.Enum):
     if robot.get_action_state() == 1 or robot.get_action_state() == 0:
       robot.cancel_action()
 
+    if robot.get_action_state() == 0:
+      robot.cancel_action()
+
     print("R_ASSISTANCE")
     #recall all the information you may need for providing assistance
     token_sol = game.get_token_sol()
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
-    delay_for_speech = 2
     game.robot_assistance = random.randint(2, 3)
+    delay_for_speech = 1
+    game.robot_assistance = 5#random.randint(0, 5)
     success = robot.action["assistance"].__call__(lev_id=game.robot_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset, delay_for_speech=delay_for_speech)
 
     self.b_robot_assist_finished = True
