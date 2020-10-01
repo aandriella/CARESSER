@@ -66,15 +66,18 @@ class Game(object):
     self.bn_caregiver_feedback = bn_caregiver_feedback
     self.bn_caregiver_assistance = bn_caregiver_assistance
 
+    #This is for user action
 
     self.attempt_counter_per_action = [[0 for i in range(len(self.bn_attempt.values()))] for j in range(len(self.bn_user_action.values()))]
     self.game_state_counter_per_action = [[0 for i in range(len(self.bn_game_state.values()))] for j in
                                      range(len(self.bn_user_action.values()))]
+
     self.caregiver_feedback_per_action = [[0 for i in range(len(self.bn_caregiver_feedback.values()))] for j in
                                  range(len(self.bn_user_action.values()))]
     self.caregiver_assistance_per_action = [[0 for i in range(len(self.bn_caregiver_assistance.values()))] for j in
                                    range(len(self.bn_user_action.values()))]
 
+    #This is for user react time
     self.attempt_counter_per_react_time = [[0 for i in range(len(self.bn_attempt.values()))] for j in
                                       range(len(self.bn_user_react_time.values()))]
     self.game_state_counter_per_react_time = [[0 for i in range(len(self.bn_game_state.values()))] for j in
@@ -84,11 +87,13 @@ class Game(object):
     self.caregiver_assistance_per_react_time = [[0 for i in range(len(self.bn_caregiver_assistance.values()))] for j in
                                        range(len(self.bn_user_react_time.values()))]
 
+    #This is for caregiver assistance
     self.game_state_counter_per_caregiver_assistance = [[0 for i in range(len(self.bn_game_state.values()))] for j in
                                                range(len(self.bn_caregiver_assistance.values()))]
     self.attempt_counter_per_caregiver_assistance = [[0 for i in range(len(self.bn_attempt.values()))] for j in
                                             range(len(self.bn_caregiver_assistance.values()))]
 
+    #This is for caregiver feedback
     self.game_state_counter_per_caregiver_feedback = [[0 for i in range(len(self.bn_game_state.values()))] for j in
                                              range(len(self.bn_caregiver_feedback.values()))]
     self.attempt_counter_per_caregiver_feedback = [[0 for i in range(len(self.bn_attempt.values()))] for j in
@@ -118,11 +123,11 @@ class Game(object):
 
   def map_react_time(self):
     '''
-    discretise the react time in 3 bins [slow, normal, fast] 0, 1, 2
+    discretise the react time in 3 bins [slow, normal, fast] 0, 1a, 2
     Args:
 
     Return:
-      0 if slow 1 if normal 2 if fast
+      0 if slow 1a if normal 2 if fast
     '''
     if self.react_time_per_token_spec_t1>0 and self.react_time_per_token_spec_t1<self.bn_user_react_time['fast']:
       return 2
