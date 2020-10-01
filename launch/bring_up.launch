@@ -111,6 +111,12 @@
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss23.yaml" />
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss24.yaml" />
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss25.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss31.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss32.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss33.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss34.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss35.yaml" />
+
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/rest.yaml" /> 
 
 
