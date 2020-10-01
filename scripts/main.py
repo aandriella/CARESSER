@@ -60,6 +60,9 @@ class StateMachine(enum.Enum):
     Return:
        True when the action has been completed
     '''
+    print("ROBOT GET ACTION ",robot.get_action_state())
+    if robot.get_action_state() == 1 or robot.get_action_state() == 0:
+      robot.cancel_action()
 
     print("R_ASSISTANCE")
     #recall all the information you may need for providing assistance
@@ -67,7 +70,7 @@ class StateMachine(enum.Enum):
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
     delay_for_speech = 2
-    game.robot_assistance = 2#random.randint(0, 5)
+    game.robot_assistance = random.randint(2, 3)
     success = robot.action["assistance"].__call__(lev_id=game.robot_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset, delay_for_speech=delay_for_speech)
 
     self.b_robot_assist_finished = True
@@ -200,8 +203,8 @@ class StateMachine(enum.Enum):
       robot.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
       self.CURRENT_STATE = self.S_ROBOT_MOVE_TOKEN_BACK
       #if robot replace with
-      self.robot_move_back(game, robot)
-      #self.user_move_back(game, robot)
+      #self.robot_move_back(game, robot)
+      self.user_move_back(game, robot)
 
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
@@ -288,11 +291,11 @@ class StateMachine(enum.Enum):
       robot.reset_speech_ended()
       while (not picked and (detected_token == ("",0,0))):
         #check here if the speech has ended if so trigger the counter
-        if speech_ended and robot.has_speech_ended():
-          game.react_time_per_token_spec_t0 = time.time()
-          robot.reset_speech_ended()
-          speech_ended = False
         if check_move_timeout(game):
+          if speech_ended and robot.has_speech_ended():
+            game.react_time_per_token_spec_t0 = time.time()
+            robot.reset_speech_ended()
+            speech_ended = False
           detected_token, picked, _, _ = game.get_move_event()
         else:
           sm.b_user_reached_timeout = True
@@ -301,6 +304,7 @@ class StateMachine(enum.Enum):
       if robot.get_action_state() == 0:
         #game.react_time_per_token_spec_t0 = time.time()
         robot.cancel_action()
+
 
       #TODO try to merge these two if conditions together
       game.elapsed_time_per_token_spec_t0 = time.time()
@@ -419,7 +423,7 @@ def main():
   objective = rospy.get_param("/objective")
 
   # we create the game instance
-  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=20, objective=objective, game_state={'beg':2, 'mid':4, 'end':5},with_SOCIABLE=with_SOCIABLE)
+  game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4, timeout=15, objective=objective, game_state={'beg':2, 'mid':4, 'end':5},with_SOCIABLE=with_SOCIABLE)
   # we create the robot instance
   speech = Speech(language)
   face = Face()
