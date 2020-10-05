@@ -10,7 +10,7 @@ import enum
 import random
 import time
 import os
-
+from termcolor import colored
 # import from ros
 import rospy
 
@@ -47,6 +47,8 @@ class StateMachine(enum.Enum):
 
   CURRENT_STATE = 1
 
+
+
   def caregiver_provide_assistance(self):
     '''
     Caregiver provides an action of assistance combining speech and gesture
@@ -54,7 +56,7 @@ class StateMachine(enum.Enum):
        True when the action has been completed
     '''
     print("C_ASSISTANCE")
-    input = raw_input("Please press a key when assistance has been provided")
+    input = raw_input(colored("Please press a key when assistance has been provided",'green'))
     self.b_caregiver_assist_finished = True
     self.b_caregiver_reengaged_user == False
     self.CURRENT_STATE = self.S_USER_ACTION
@@ -70,13 +72,13 @@ class StateMachine(enum.Enum):
 
     if game.moved_back:
       print("token has been moved back, DO nothing")
-      # game.n_mistakes += 1
-      # game.n_attempt_per_token += 1
-      # game.set_n_attempt_per_token(game.n_attempt_per_token)
-      # game.set_n_mistakes(game.n_mistakes)
+      game.n_mistakes += 1
+      game.n_attempt_per_token += 1
+      game.set_n_attempt_per_token(game.n_attempt_per_token)
+      game.set_n_mistakes(game.n_mistakes)
 
       if game.n_attempt_per_token > game.n_max_attempt_per_token:
-        print("Max attempt reached")
+        print(colored("Max attempt reached", "red"))
         game.set_n_correct_move(game.get_n_correct_move() + 1)
         game.set_n_attempt_per_token(1)
         self.n_sociable_per_token = 0
@@ -91,7 +93,7 @@ class StateMachine(enum.Enum):
 
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token > game.n_max_attempt_per_token:
-        print("Max attempt reached")
+        print(colored("Max attempt reached", "red"))
         game.set_n_correct_move(game.get_n_correct_move() + 1)
         game.set_n_attempt_per_token(1)
         self.n_sociable_per_token = 0
@@ -105,7 +107,7 @@ class StateMachine(enum.Enum):
       self.n_timeout_per_token = 0
 
     elif game.outcome == -1:
-      print("wrong_solution")
+      print(colored("WRONG SOLUTION", "red"))
       game.n_mistakes += 1
       game.n_attempt_per_token += 1
       game.set_n_attempt_per_token(game.n_attempt_per_token)
@@ -113,7 +115,7 @@ class StateMachine(enum.Enum):
 
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token > game.n_max_attempt_per_token:
-        print("Max attempt reached")
+        print(colored("Max attempt reached", "red"))
         game.set_n_correct_move(game.get_n_correct_move() + 1)
         game.set_n_attempt_per_token(1)
         self.n_sociable_per_token = 0
@@ -129,25 +131,29 @@ class StateMachine(enum.Enum):
     print("R_OUTCOME")
     #input = raw_input("Please press a key when outcome has been provided")
 
-    if game.moved_back:
-      print("token has been moved back, DO nothing")
+    if game.moved_back and not self.b_user_reached_timeout:
+      print(colored("token has been moved back", "red"))
+
       game.outcome = -1
       self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
-        print("Max attempt reached")
+        print(colored("Max attempt reached", "red"))
         self.S_CAREGIVER_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
         self.caregiver_move_correct_token(game)
 
-    elif game.detected_token == []:
-      print("timeout")
+    elif game.detected_token == [] or self.b_user_reached_timeout:
+      print(colored("TIMEOUT", 'red'))
       game.outcome = 0
       self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
+      if not game.check_board():
+        print("Ask the user to do something")
+
 
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
-        print("Max attempt reached")
+        print(colored("Max attempt reached", "red"))
         self.S_CAREGIVER_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
         self.caregiver_move_correct_token(game)
@@ -156,19 +162,19 @@ class StateMachine(enum.Enum):
     elif game.detected_token[0] == game.solution[game.n_correct_move] \
         and game.detected_token[2] == (game.solution.index(game.detected_token[0]) + 1):
       game.outcome = 1
-      print("correct_solution ", game.get_n_correct_move())
+      print(colored("CORRECT:",'red'), game.get_n_correct_move())
       self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
 
     elif game.detected_token[0] != game.solution[game.n_correct_move] \
         or game.detected_token[2] != game.solution.index(game.detected_token[0]) + 1:
       game.outcome = -1
-      print("wrong_solution")
+      print(colored("WRONG",'red'))
       self.CURRENT_STATE = self.S_CAREGIVER_MOVE_TOKEN_BACK
       self.user_move_back(game)
 
       # check if the user reached his max number of attempts
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
-        print("Max attempt reached")
+        print(colored("Max attempt reached", "red"))
         self.S_CAREGIVER_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
         self.caregiver_move_correct_token(game)
@@ -177,12 +183,12 @@ class StateMachine(enum.Enum):
     return self.b_caregiver_outcome_finished
 
   def caregiver_move_correct_token(self, game):
-    print("Waiting for caregiver to move the correct token ....")
+    print(colored("Waiting for caregiver to move the correct token ....", 'red'))
     # get the current solution
     token, _from, _to = game.get_token_sol()
     while (game.detected_token != (token, _from, _to)):
       pass
-    print("Caregiver moves the correct token as the user reached the max number of attempts")
+    print(colored("Caregiver moves the correct token as the user reached the max number of attempts"))
     self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
     self.b_user_moved_token_back = True
     return self.b_caregiver_moved_correct_token
@@ -194,7 +200,7 @@ class StateMachine(enum.Enum):
     token_to = game.initial_board[game.initial_board.values(token_id)]
     while(token_from != token_to):
       pass
-    print("Caregiver moved back the token")
+    print(colored("Caregiver moved back the token", 'red'))
     self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
     self.b_caregiver_moved_token_back = True
     return self.b_caregiver_moved_token_back
@@ -202,10 +208,13 @@ class StateMachine(enum.Enum):
   def user_move_back(self, game):
     # user moved the token in an incorrect location
     # caregiver moved it back
-    print("User moved back the token")
+    print(colored("User moved back the token"))
     #success = caregiver.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1a)
     # get the initial location of the placed token and move back there
     token_id, token_from, token_to = game.detected_token
+    if token_to == 0:
+      #means you have the token in your hand
+      token_to = token_from
     while (game.detected_token != (token_id, token_to, token_from)):
       pass
     self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
@@ -225,14 +234,14 @@ class StateMachine(enum.Enum):
       '''
     print("U_ACTION")
 
-    def check_move_timeout(game):
+    def check_move_timeout(game, time_to_start):
       '''we need to check if the computed time (react+elapsed) is smaller than timeout
       if not, we need to trigger different actions:
       1a. if the user has not picked a token (re-engage)
       2. if the user has picked a token, ask her to move it back
       '''
       current_time = time.time()
-      elapsed_time = current_time - game.react_time_per_token_spec_t0
+      elapsed_time = current_time - time_to_start
       if elapsed_time < game.timeout:
         return True
       else:
@@ -244,7 +253,7 @@ class StateMachine(enum.Enum):
       sm.CURRENT_STATE = sm.S_CAREGIVER_FEEDBACK
       detected_token, picked, _, _ = game.get_move_event()
       while (not picked and (detected_token == [])):
-        if check_move_timeout(game):
+        if check_move_timeout(game, game.react_time_per_token_spec_t0):
           detected_token, picked, _, _ = game.get_move_event()
         else:
           sm.b_user_reached_timeout = True
@@ -298,7 +307,11 @@ class StateMachine(enum.Enum):
       # here we check whether a token has been picked, and where it has been placed
       detected_token, picked, placed, moved_back = game.get_move_event()
       while (not placed):
-        detected_token, _, placed, moved_back = game.get_move_event()
+        if check_move_timeout(game, game.elapsed_time_per_token_spec_t0):
+          detected_token, _, placed, moved_back = game.get_move_event()
+        else:
+          sm.CURRENT_STATE = sm.S_CAREGIVER_OUTCOME
+          break
       if (placed and moved_back):
         sm.CURRENT_STATE = sm.S_CAREGIVER_OUTCOME
         return user_place_token_back(sm)
@@ -306,7 +319,8 @@ class StateMachine(enum.Enum):
         sm.CURRENT_STATE = sm.S_CAREGIVER_OUTCOME
         return user_place_token_sol(sm)
       else:
-        assert "Unexpected state"
+        sm.b_user_reached_timeout = True
+        return False
 
     self.CURRENT_STATE = self.S_USER_ACTION
     # if the user picks a token and SOCIABLE is active
@@ -314,7 +328,9 @@ class StateMachine(enum.Enum):
       if user_place(self, game):
         return True
       else:
-         print("Something went wrong with user place")
+        print("Ask the user to place back the token")
+        self.user_move_back(game)
+        self.CURRENT_STATE = self.S_CAREGIVER_OUTCOME
     else:
       print("user_pick_token==False")
       self.CURRENT_STATE = self.S_CAREGIVER_OUTCOME
@@ -396,6 +412,8 @@ def main():
   sm = StateMachine(1)
 
   while game.get_n_correct_move() < game.task_length:
+    while not game.check_board():
+      print("Do something")
 
     if sm.CURRENT_STATE.value == sm.S_CAREGIVER_ASSIST.value:
       sm.caregiver_provide_assistance()
@@ -423,6 +441,7 @@ def main():
       sm.update_counters(game)
       game.reset_counters_spec()
       game.reset_detected_token()
+
 
   entry_log = game.store_info_summary()
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log)
