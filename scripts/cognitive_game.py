@@ -113,6 +113,17 @@ class Game(object):
     self.bn_dict_vars_caregiver_feedback = {'game_state':self.game_state_counter_per_caregiver_feedback,
 						'attempt':self.attempt_counter_per_caregiver_feedback}
 
+
+  def check_board(self):
+    '''this method checks if all the tokens are on the board if notask the user to place it correctly'''
+    n_tokens_on_board = self.current_board.count('0')
+    if n_tokens_on_board!= self.task_length:
+      print("ask the caregiver to do something")
+      return False
+    else:
+      return True
+
+
   def map_user_action(self, outcome):
     if outcome == -1:
       return self.bn_user_action['wrong']
@@ -156,6 +167,12 @@ class Game(object):
                      self.initial_board[index] == token_id].pop() + 1
     token_to = self.n_correct_move + 1
     return (token_id, token_from, token_to)
+
+  def get_token_init_loc(self, token_id):
+    '''This method returns the  token   initial location on the board'''
+    token_from = [index for index in range(len(self.initial_board)) if
+                     self.initial_board[index] == token_id].pop() + 1
+    return (token_id, token_from)
 
   def get_board_event_callback(self, msg):
     '''callback from the topic board_status to get the status of the current_board'''
