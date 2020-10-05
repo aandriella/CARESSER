@@ -70,17 +70,17 @@ class StateMachine(enum.Enum):
 
     if game.moved_back:
       print("token has been moved back, DO nothing")
-      game.n_mistakes += 1
-      game.n_attempt_per_token += 1
-      game.set_n_attempt_per_token(game.n_attempt_per_token)
-      game.set_n_mistakes(game.n_mistakes)
+      # game.n_mistakes += 1
+      # game.n_attempt_per_token += 1
+      # game.set_n_attempt_per_token(game.n_attempt_per_token)
+      # game.set_n_mistakes(game.n_mistakes)
 
-      # if game.n_attempt_per_token > game.n_max_attempt_per_token:
-      #   print("Max attempt reached")
-      #   game.set_n_correct_move(game.get_n_correct_move() + 1)
-      #   game.set_n_attempt_per_token(1)
-      #   self.n_sociable_per_token = 0
-      #   self.n_timeout_per_token = 0
+      if game.n_attempt_per_token > game.n_max_attempt_per_token:
+        print("Max attempt reached")
+        game.set_n_correct_move(game.get_n_correct_move() + 1)
+        game.set_n_attempt_per_token(1)
+        self.n_sociable_per_token = 0
+        self.n_timeout_per_token = 0
 
     elif game.outcome == 0:
       game.n_timeout_per_token += 1
