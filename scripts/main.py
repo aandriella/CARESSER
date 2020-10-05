@@ -360,11 +360,12 @@ def main():
   parent_dir_of_file = os.path.dirname(dir_path)
   path_name = parent_dir_of_file + "/caregiver_in_the_loop/log/" + str(user_id)+"/"+str(with_feedback)+"/"+str(session_id)
 
-  if not os.path.exists(path_name):
-    os.makedirs(path_name)
-  else:
-    assert "Error the directory already exists"
-    exit(0)
+  try:
+      os.makedirs(path_name)
+  except IOError:
+      print("Error the directory already exists")
+      exit(0)
+
 
   file_spec = path_name + "/log_spec.csv"
   file_gen = path_name + "/log_gen.csv"
