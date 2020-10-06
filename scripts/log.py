@@ -7,13 +7,16 @@ import pickle
 
 
 class Log():
-  def __init__(self, filename_spec, fieldnames_spec, filename_gen, fieldnames_gen, filename_sum, fieldnames_sum):
+  def __init__(self, filename_spec, fieldnames_spec, filename_gen, fieldnames_gen, filename_sum, fieldnames_sum,
+               filename_bn_vars, fieldnames_bn_vars):
     self.filename_spec = filename_spec
     self.filename_gen = filename_gen
     self.filename_sum = filename_sum
+    self.filename_bn = filename_bn_vars
     self.fieldnames_spec = fieldnames_spec
     self.fieldnames_gen = fieldnames_gen
     self.fieldnames_sum = fieldnames_sum
+    self.fieldnames_bn = fieldnames_bn_vars
 
   def add_row_entry(self, log_filename, fieldnames, data):
     with open(log_filename, mode='a') as csv_file:
