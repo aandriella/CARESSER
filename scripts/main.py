@@ -11,6 +11,7 @@ import random
 import time
 import os
 from termcolor import colored
+import pygame
 # import from ros
 import rospy
 
@@ -48,6 +49,18 @@ class StateMachine(enum.Enum):
   CURRENT_STATE = 1
 
 
+  def play_sound(self, file_path, sleep):
+    '''
+    play a sound using pygame
+    '''
+    pygame.mixer.init()
+    # pygame.mixer.music.load(parent_dir_of_file+'/sounds/wrong_move_trim.mp3')
+    pygame.mixer.music.load("../sounds/"+file_path)
+    pygame.mixer.music.play(0)
+    time.sleep(sleep)
+
+  def stop_sound(self):
+    pygame.mixer.music.stop()
 
   def caregiver_provide_assistance(self):
     '''
@@ -71,6 +84,9 @@ class StateMachine(enum.Enum):
     print("Update_counters")
 
     if game.moved_back:
+      if game.outcome == 0:
+        game.n_timeout_per_token += 1
+
       print("token has been moved back, DO nothing")
       game.n_mistakes += 1
       game.n_attempt_per_token += 1
@@ -83,6 +99,8 @@ class StateMachine(enum.Enum):
         game.set_n_attempt_per_token(1)
         self.n_sociable_per_token = 0
         self.n_timeout_per_token = 0
+
+
 
     elif game.outcome == 0:
       game.n_timeout_per_token += 1
@@ -141,14 +159,27 @@ class StateMachine(enum.Enum):
         print(colored("Max attempt reached", "red"))
         self.S_CAREGIVER_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
+        self.play_sound("max_attempt_trim.mp3", 3)
         self.caregiver_move_correct_token(game)
 
-    elif game.detected_token == [] or self.b_user_reached_timeout:
+    elif game.detected_token == [] and self.b_user_reached_timeout:
       print(colored("TIMEOUT", 'red'))
       game.outcome = 0
+      self.play_sound("timeout_trim.mp3", 3)
       self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
+      self.b_user_reached_timeout = False
+
+    elif game.detected_token != [] and self.b_user_reached_timeout:
+      print(colored("TIMEOUT", 'red'))
+      game.outcome = 0
+      self.play_sound("timeout_trim.mp3", 3)
+      print("Ask the user to place back the token")
+      self.user_move_back(game)
+      self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
+      self.b_user_reached_timeout = False
+
       if not game.check_board():
-        print("Ask the user to do something")
+        print(colored("BOARD HAS TO BE RESET", 'red'))
 
 
       # check if the user reached his max number of attempts
@@ -156,6 +187,7 @@ class StateMachine(enum.Enum):
         print(colored("Max attempt reached", "red"))
         self.S_CAREGIVER_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
+        self.play_sound("max_attempt_trim.mp3", 3)
         self.caregiver_move_correct_token(game)
 
     # get current move and check if it is the one expeceted in the solution list
@@ -178,6 +210,7 @@ class StateMachine(enum.Enum):
         self.S_CAREGIVER_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
         self.caregiver_move_correct_token(game)
+        self.play_sound("max_attempt_trim.mp3", 3)
 
     self.b_caregiver_outcome_finished = True
     return self.b_caregiver_outcome_finished
@@ -257,7 +290,8 @@ class StateMachine(enum.Enum):
           detected_token, picked, _, _ = game.get_move_event()
         else:
           sm.b_user_reached_timeout = True
-          game.react_time_per_token_spec_t0 = time.time()
+          game.react_time_per_token_spec_t1 = game.timeout
+          game.elapsed_time_per_token_spec_t1 = game.timeout
           return False
 
       game.elapsed_time_per_token_spec_t0 = time.time()
@@ -320,6 +354,8 @@ class StateMachine(enum.Enum):
         return user_place_token_sol(sm)
       else:
         sm.b_user_reached_timeout = True
+        game.elapsed_time_per_token_spec_t1 = game.timeout
+        game.react_time_per_token_spec_t1 = game.timeout
         return False
 
     self.CURRENT_STATE = self.S_USER_ACTION
@@ -328,8 +364,7 @@ class StateMachine(enum.Enum):
       if user_place(self, game):
         return True
       else:
-        print("Ask the user to place back the token")
-        self.user_move_back(game)
+        #TIMEOUT
         self.CURRENT_STATE = self.S_CAREGIVER_OUTCOME
     else:
       print("user_pick_token==False")
@@ -363,7 +398,7 @@ def main():
 
   # we create the game instance
   game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4,
-              timeout=15, objective=objective,
+              timeout=10, objective=objective,
               bn_game_state={'beg': 2, 'mid': 4, 'end': 5}, bn_attempt={'att_1':0, 'att_2':1, 'att_3':2, 'att_4':3},
               bn_caregiver_feedback={'no':0,'yes':1},
               bn_caregiver_assistance={'lev_0':0,'lev_1':1,'lev_2':2,'lev_3':3,'lev_4':4,'lev_5':5},
@@ -386,6 +421,7 @@ def main():
   file_spec = path_name + "/log_spec.csv"
   file_gen = path_name + "/log_gen.csv"
   file_summary = path_name + "/log_summary.csv"
+  file_bn_variables = path_name+"/bn_variables.csv"
   bn_belief_user_action_file = path_name + "/bn_belief_user_action.pkl"
   bn_belief_user_react_time_file = path_name + "/bn_belief_user_react_time.pkl"
   bn_belief_caregiver_assistive_action = path_name + "/bn_belief_caregiver_assistive_action.pkl"
@@ -401,25 +437,41 @@ def main():
   entry_log_summary = {"n_attempt":"n_attempt", "n_timeout":"n_timeout", "n_sociable":"n_sociable",
                        "avg_lev_assistance":"avg_lev_assistance", "tot_react_time":"tot_react_time",
                        "tot_elapsed_time":"tot_elapsed_time"}
+  entry_bn_variables = {"game_state":"game_state","attempt":"attempt", "user_react_time":"user_react_time",
+                        "agent_assistance":"agent_assistance", "agent_feedback":"agent_feedback",
+                        "user_action":"user_action", "user_memory":"user_memory", "user_reactivity":"user_reactivity"}
+
 
   log = Log(filename_spec=file_spec, fieldnames_spec=entry_log_spec, filename_gen=file_gen,
-            fieldnames_gen=entry_log_gen, filename_sum=file_summary, fieldnames_sum=entry_log_summary)
+            fieldnames_gen=entry_log_gen, filename_sum=file_summary, fieldnames_sum=entry_log_summary,
+            filename_bn_vars= file_bn_variables, fieldnames_bn_vars=entry_bn_variables
+            )
 
   log.add_row_entry(log_filename=file_spec, fieldnames=entry_log_spec, data=entry_log_spec)
   log.add_row_entry(log_filename=file_gen, fieldnames=entry_log_gen, data=entry_log_gen)
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log_summary)
+  log.add_row_entry(log_filename=file_bn_variables, fieldnames=entry_bn_variables, data=entry_bn_variables)
 
   sm = StateMachine(1)
 
   while game.get_n_correct_move() < game.task_length:
-    while not game.check_board():
-      print("Do something")
+
+
 
     if sm.CURRENT_STATE.value == sm.S_CAREGIVER_ASSIST.value:
+      rospy.sleep(0.1)
+      while not game.check_board() and not sm.b_user_reached_timeout:
+        print(game.current_board)
+        sm.play_sound("something_went_wrong_trim.mp3", 1)
+
       sm.caregiver_provide_assistance()
       game.avg_caregiver_assistance_per_move += game.caregiver_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
+      while not game.check_board() and not sm.b_user_reached_timeout:
+        print(game.current_board)
+        sm.play_sound("something_went_wrong_trim.mp3", 1)
+
       print("Expected token ", game.solution[game.get_n_correct_move()])
       time_to_act = time.time()
       #game.with_SOCIABLE = random.randint(0,1a)
@@ -438,6 +490,7 @@ def main():
 
       entry_log = game.store_info_spec(game.outcome)
       log.add_row_entry(log_filename=file_spec, fieldnames=entry_log_spec, data=entry_log)
+      log.add_row_entry(log_filename=file_bn_variables, fieldnames=entry_bn_variables, data=game.store_bn_variables(game.outcome))
       sm.update_counters(game)
       game.reset_counters_spec()
       game.reset_detected_token()
