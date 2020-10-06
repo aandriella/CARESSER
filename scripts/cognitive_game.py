@@ -51,14 +51,17 @@ class Game(object):
     self.elapsed_time_per_token_gen_t1 = 0.0
     self.elapsed_time_per_token_spec_t1 = 0.0
     self.total_elapsed_time = 0.0
+
     self.move_info_gen = dict()
     self.move_info_spec = dict()
     self.move_info_summary = dict()
+    self.bn_varibles = dict()
+
     self.move_info_gen_vect = list()
     self.move_info_spec_vect = list()
     self.move_info_summary_vect = list()
+    self.bn_varibles_vect = list()
 
-    #TODO For the BN Simulator, initialise this variable according to the simulator
     self.bn_user_action = bn_user_action
     self.bn_user_react_time = bn_user_react_time
     self.bn_game_state = bn_game_state
@@ -254,6 +257,21 @@ class Game(object):
   def add_info_spec_vect(self, dict):
     self.move_info_spec_vect.append(dict.copy())
 
+  def add_info_bn_variables(self, dict):
+    self.bn_varibles_vect.append(dict.copy())
+
+
+  def store_bn_variables(self, outcome):
+    self.bn_varibles['game_state'] = self.map_game_state()
+    self.bn_varibles['attempt'] = self.n_attempt_per_token
+    self.bn_varibles['user_react_time'] = self.map_react_time()
+    self.bn_varibles['agent_assistance'] = 0
+    self.bn_varibles['agent_feedback'] = 0
+    self.bn_varibles['user_action'] = self.map_user_action(outcome)
+    self.bn_varibles['user_reactivity'] = 0
+    self.bn_varibles['user_memory'] = 0
+    self.add_info_bn_variables(self.bn_varibles)
+    return self.bn_varibles
 
   def store_info_spec(self, outcome):
     #timeout
