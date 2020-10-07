@@ -15,6 +15,12 @@ import pygame
 # import from ros
 import rospy
 
+path = os.path.abspath(__file__)
+dir_path = os.path.dirname(path)
+parent_dir_of_file = os.path.dirname(dir_path)
+parent_parent_dir_of_file = os.path.dirname(parent_dir_of_file)
+
+
 
 class StateMachine(enum.Enum):
 
@@ -55,7 +61,7 @@ class StateMachine(enum.Enum):
     '''
     pygame.mixer.init()
     # pygame.mixer.music.load(parent_dir_of_file+'/sounds/wrong_move_trim.mp3')
-    pygame.mixer.music.load("../sounds/"+file_path)
+    pygame.mixer.music.load(parent_dir_of_file+"/sounds/"+file_path)
     pygame.mixer.music.play(0)
     time.sleep(sleep)
 
@@ -69,6 +75,7 @@ class StateMachine(enum.Enum):
        True when the action has been completed
     '''
     print("C_ASSISTANCE")
+    rospy.sleep(0.1)
     input = raw_input(colored("Please press a key when assistance has been provided",'green'))
     self.b_caregiver_assist_finished = True
     self.b_caregiver_reengaged_user == False
@@ -180,6 +187,10 @@ class StateMachine(enum.Enum):
 
       if not game.check_board():
         print(colored("BOARD HAS TO BE RESET", 'red'))
+      while not game.check_board():
+        print(game.current_board)
+        game.current_board = game.get_board_event()
+        self.play_sound("something_went_wrong_trim.mp3", 1)
 
 
       # check if the user reached his max number of attempts
@@ -248,8 +259,11 @@ class StateMachine(enum.Enum):
     if token_to == 0:
       #means you have the token in your hand
       token_to = token_from
-    while (game.detected_token != (token_id, token_to, token_from)):
+    curr_token, _, curr_token_to = game.detected_token
+    while (curr_token== (token_id) and curr_token_to != token_from):
+      curr_token, _, curr_token_to = game.detected_token
       pass
+
     self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
     self.b_user_moved_token_back = True
     return self.b_user_moved_token_back
@@ -287,7 +301,7 @@ class StateMachine(enum.Enum):
       detected_token, picked, _, _ = game.get_move_event()
       while (not picked and (detected_token == [])):
         if check_move_timeout(game, game.react_time_per_token_spec_t0):
-          detected_token, picked, _, _ = game.get_move_event()
+          detected_token, picked, _, moved_back = game.get_move_event()
         else:
           sm.b_user_reached_timeout = True
           game.react_time_per_token_spec_t1 = game.timeout
@@ -394,11 +408,11 @@ def main():
   session_id = rospy.get_param("/session_id")
   with_feedback = rospy.get_param("/with_feedback")
   objective = rospy.get_param("/objective")
-
+  timeout = rospy.get_param("/timeout")
 
   # we create the game instance
   game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4,
-              timeout=10, objective=objective,
+              timeout=timeout, objective=objective,
               bn_game_state={'beg': 2, 'mid': 4, 'end': 5}, bn_attempt={'att_1':0, 'att_2':1, 'att_3':2, 'att_4':3},
               bn_caregiver_feedback={'no':0,'yes':1},
               bn_caregiver_assistance={'lev_0':0,'lev_1':1,'lev_2':2,'lev_3':3,'lev_4':4,'lev_5':5},
@@ -417,6 +431,10 @@ def main():
       print("Error the directory already exists")
       exit(0)
 
+
+  print("You are playing with the following numbers: ", game.current_board)
+  print("The solution of the game is ", game.solution)
+  input = raw_input("Press a key to start:")
 
   file_spec = path_name + "/log_spec.csv"
   file_gen = path_name + "/log_gen.csv"
@@ -454,14 +472,15 @@ def main():
 
   sm = StateMachine(1)
 
+
   while game.get_n_correct_move() < game.task_length:
-
-
 
     if sm.CURRENT_STATE.value == sm.S_CAREGIVER_ASSIST.value:
       rospy.sleep(0.1)
-      while not game.check_board() and not sm.b_user_reached_timeout:
+      while not game.check_board():
+
         print(game.current_board)
+        game.current_board = game.get_board_event()
         sm.play_sound("something_went_wrong_trim.mp3", 1)
 
       sm.caregiver_provide_assistance()
