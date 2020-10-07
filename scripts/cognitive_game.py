@@ -37,7 +37,7 @@ class Game(object):
     self.n_mistakes = 0
     self.n_correct_move = 0
     #subscriber variables from detect_move
-    self.detected_token = []
+    self.detected_token = ()
     self.picked = False
     self.placed = False
     self.moved_back = False
@@ -203,17 +203,17 @@ class Game(object):
     '''The method return a list with the tokens ordered based on the solution of the exercise'''
     board_ = self.current_board[:]
     #remove the empty cells from the current_board
-    board_filtered = list(filter(lambda x: x!="0", board_))
+    board_filtered = [int(i) for i in list(filter(lambda x: x!="0", board_))]
     even_number_list = [str(num) for num in board_filtered if int(num) % 2 == 0]
     odd_number_list = [str(num) for num in board_filtered if int(num) % 2 != 0]
     if self.objective == "ascending":
-      self.solution = sorted(board_filtered)[:n_token]
+      self.solution = [str(num) for num in sorted(board_filtered)[:n_token]]
     elif self.objective == "ascending_even":
       self.solution = sorted(even_number_list)[:n_token]
     elif self.objective == "ascending_odd":
       self.solution = sorted(odd_number_list)[:n_token]
     elif self.objective == "descending":
-      self.solution = sorted(board_filtered, reverse=True)[:n_token]
+      self.solution = [str(num) for num in sorted(board_filtered, reverse=True)[:n_token]]
     elif self.objective == "descending_even":
       self.solution = sorted(even_number_list, reverse=True)[:n_token]
     elif self.objective == "descending_odd":
