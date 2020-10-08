@@ -169,8 +169,9 @@ class StateMachine(enum.Enum):
         self.play_sound("max_attempt_trim.mp3", 3)
         self.caregiver_move_correct_token(game)
 
-    elif game.detected_token == [] and self.b_user_reached_timeout:
+    elif (game.detected_token == [] or game.detected_token == ())  and self.b_user_reached_timeout:
       print(colored("TIMEOUT", 'red'))
+      print(game.detected_token)
       game.outcome = 0
       self.play_sound("timeout_trim.mp3", 3)
       self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
@@ -185,7 +186,8 @@ class StateMachine(enum.Enum):
 
 
     elif game.detected_token != [] and self.b_user_reached_timeout:
-      print(colored("TIMEOUT", 'red'))
+      print(colored("TIMEOUT game detected !=[]", 'red'))
+      print(game.detected_token)
       game.outcome = 0
       self.play_sound("timeout_trim.mp3", 3)
       self.user_move_back(game)
@@ -197,7 +199,7 @@ class StateMachine(enum.Enum):
       while not game.check_board():
         print(game.current_board)
         game.current_board = game.get_board_event()
-        self.play_sound("something_went_wrong_trim.mp3", 1)
+        #self.play_sound("something_went_wrong_trim.mp3", 1)
 
 
       # check if the user reached his max number of attempts
@@ -445,6 +447,7 @@ def main():
   print("The solution of the game is ", game.solution)
   input = raw_input("Press a key to start:")
 
+  file_params = path_name + "/log_params.csv"
   file_spec = path_name + "/log_spec.csv"
   file_gen = path_name + "/log_gen.csv"
   file_summary = path_name + "/log_summary.csv"
@@ -457,7 +460,6 @@ def main():
   entry_log_spec = {'game_state':'game_state', 'user_react_time':'user_react_time', 'user_action':'user_action', 'token_id':'token_id', 'from':'from', 'to':'to',
                     'caregiver_assistance':'caregiver_assistance', "react_time":'react_time',
                     'elapsed_time':'elapsed_time', "attempt":'attempt', "timeout":'timeout', "caregiver_feedback":'caregiver_feedback'}
-
   entry_log_gen = {"token_id":'token_id', 'user_action':'user_action', "from":'from', "to":'to', "avg_caregiver_assistance_per_move":'avg_caregiver_assistance_per_move',
                   "cum_react_time":"cum_react_time", "cum_elapsed_time":"cum_elapsed_time", "attempt":"attempt",
                   "timeout":"timeout", "caregiver_feedback":"caregiver_feedback"}
@@ -468,12 +470,21 @@ def main():
                         "agent_assistance":"agent_assistance", "agent_feedback":"agent_feedback",
                         "user_action":"user_action", "user_memory":"user_memory", "user_reactivity":"user_reactivity"}
 
+  entry_params = {"user_id":"user_id", "session":"session", "with_feedback":"with_feedback", "objective":"objective", "timeout":"timeout"}
 
-  log = Log(filename_spec=file_spec, fieldnames_spec=entry_log_spec, filename_gen=file_gen,
+
+  log = Log(filename_params=file_params, fieldnames_params=entry_params,
+            filename_spec=file_spec, fieldnames_spec=entry_log_spec, filename_gen=file_gen,
             fieldnames_gen=entry_log_gen, filename_sum=file_summary, fieldnames_sum=entry_log_summary,
             filename_bn_vars= file_bn_variables, fieldnames_bn_vars=entry_bn_variables
             )
 
+  log.add_row_entry(log_filename=file_params, fieldnames=entry_params, data=entry_params)
+  log.add_row_entry(log_filename=file_params, fieldnames=entry_params, data= {"user_id":user_id,
+                                                                              "session":session_id,
+                                                                              "with_feedback":with_feedback,
+                                                                              "objective":objective,
+                                                                              "timeout":timeout})
   log.add_row_entry(log_filename=file_spec, fieldnames=entry_log_spec, data=entry_log_spec)
   log.add_row_entry(log_filename=file_gen, fieldnames=entry_log_gen, data=entry_log_gen)
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log_summary)
@@ -490,7 +501,7 @@ def main():
 
         print(game.current_board)
         game.current_board = game.get_board_event()
-        sm.play_sound("something_went_wrong_trim.mp3", 1)
+        #sm.play_sound("something_went_wrong_trim.mp3", 1)
 
       sm.caregiver_provide_assistance()
       game.avg_caregiver_assistance_per_move += game.caregiver_assistance
@@ -498,7 +509,7 @@ def main():
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
       while not game.check_board() and not sm.b_user_reached_timeout:
         print(game.current_board)
-        sm.play_sound("something_went_wrong_trim.mp3", 1)
+        #sm.play_sound("something_went_wrong_trim.mp3", 1)
 
       print("Expected token ", game.solution[game.get_n_correct_move()])
       time_to_act = time.time()
