@@ -1,0 +1,14 @@
+<launch>
+  <node pkg="carf" type="main.py" name="carf" output="screen"/>
+	   <arg name="user_id" default="0000" />
+	        <param name="/user_id" value="$(arg user_id)" />
+	   <arg name="with_feedback" default="True" />
+	        <param name="/with_feedback" value="$(arg with_feedback)" />
+	   <arg name="session_id" default="0" />
+	        <param name="/session_id" value="$(arg session_id)" />
+	   <arg name="objective" default="ascending" />
+	        <param name="/objective" value="$(arg objective)" />
+	    <arg name="timeout" default="15" />
+	        <param name="/timeout" value="$(arg timeout)" />
+
+</launch>

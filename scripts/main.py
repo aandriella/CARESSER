@@ -176,6 +176,14 @@ class StateMachine(enum.Enum):
       self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
       self.b_user_reached_timeout = False
 
+      if game.n_attempt_per_token >= game.n_max_attempt_per_token:
+        print(colored("Max attempt reached", "red"))
+        self.S_CAREGIVER_MOVE_CORRECT_TOKEN = True
+        self.b_user_reached_max_attempt = True
+        self.play_sound("max_attempt_trim.mp3", 3)
+        self.caregiver_move_correct_token(game)
+
+
     elif game.detected_token != [] and self.b_user_reached_timeout:
       print(colored("TIMEOUT", 'red'))
       game.outcome = 0
