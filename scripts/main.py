@@ -188,13 +188,12 @@ class StateMachine(enum.Enum):
       print(colored("TIMEOUT", 'red'))
       game.outcome = 0
       self.play_sound("timeout_trim.mp3", 3)
-      print("Ask the user to place back the token")
       self.user_move_back(game)
       self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
       self.b_user_reached_timeout = False
 
       if not game.check_board():
-        print(colored("BOARD HAS TO BE RESET", 'red'))
+        print(colored("BOARD HAS TO BE RESET", 'yellow'))
       while not game.check_board():
         print(game.current_board)
         game.current_board = game.get_board_event()
@@ -213,13 +212,15 @@ class StateMachine(enum.Enum):
     elif game.detected_token[0] == game.solution[game.n_correct_move] \
         and game.detected_token[2] == (game.solution.index(game.detected_token[0]) + 1):
       game.outcome = 1
-      print(colored("CORRECT:",'red'), game.get_n_correct_move())
+      print(colored("CORRECT:", 'red'))
+      print(colored(game.get_n_correct_move(), 'red'))
       self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
 
     elif game.detected_token[0] != game.solution[game.n_correct_move] \
         or game.detected_token[2] != game.solution.index(game.detected_token[0]) + 1:
       game.outcome = -1
       print(colored("WRONG",'red'))
+      print(colored(game.n_attempt_per_token, 'red'))
       self.CURRENT_STATE = self.S_CAREGIVER_MOVE_TOKEN_BACK
       self.user_move_back(game)
 
@@ -240,7 +241,7 @@ class StateMachine(enum.Enum):
     token, _from, _to = game.get_token_sol()
     while (game.detected_token != (token, _from, _to)):
       pass
-    print(colored("Caregiver moves the correct token as the user reached the max number of attempts"))
+    print(colored("Caregiver moves the correct token as the user reached the max number of attempts", 'red'))
     self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
     self.b_user_moved_token_back = True
     return self.b_caregiver_moved_correct_token
@@ -252,7 +253,7 @@ class StateMachine(enum.Enum):
     token_to = game.initial_board[game.initial_board.values(token_id)]
     while(token_from != token_to):
       pass
-    print(colored("Caregiver moved back the token", 'red'))
+    print(colored("Caregiver moves back the token ...", 'red'))
     self.CURRENT_STATE = self.S_CAREGIVER_ASSIST
     self.b_caregiver_moved_token_back = True
     return self.b_caregiver_moved_token_back
@@ -260,7 +261,7 @@ class StateMachine(enum.Enum):
   def user_move_back(self, game):
     # user moved the token in an incorrect location
     # caregiver moved it back
-    print(colored("User moved back the token"))
+    print(colored("User moves back the token ...", 'red'))
     #success = caregiver.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1a)
     # get the initial location of the placed token and move back there
     token_id, token_from, token_to = game.detected_token
