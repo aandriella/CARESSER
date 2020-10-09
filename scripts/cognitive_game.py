@@ -3,7 +3,7 @@ from board_state.msg import TokenMsg
 from board_state.msg import BoardMsg
 
 class Game(object):
-  def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective, game_state,
+  def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective, sociable,
                bn_game_state, bn_attempt, bn_agent_feedback, bn_agent_assistance, bn_user_react_time,
                bn_user_action):
     rospy.init_node('big_hero', anonymous=True)
@@ -12,6 +12,7 @@ class Game(object):
     rospy.Subscriber("/board_status", BoardMsg, self.get_board_event_callback)
     #get the objective of the exercise from the launch file
     self.objective = objective
+    self.with_feedback = sociable
     #we need a sleep in order to give the system the time to get the board info
     self.current_board = []
     rospy.sleep(2)
@@ -26,7 +27,6 @@ class Game(object):
     self.outcome = 0
     self.width = board_size[0]
     self.height = board_size[1]
-    self.game_state = game_state
     #counters
     self.n_attempt_per_token = 1
     self.n_timeout_per_token = 0
@@ -35,7 +35,7 @@ class Game(object):
     self.n_mistakes = 0
     self.n_correct_move = 0
     #subscriber variables from detect_move
-    self.detected_token = ()
+    self.detected_token = []
     self.picked = False
     self.placed = False
     self.moved_back = False
@@ -200,9 +200,9 @@ class Game(object):
     Return:
       the id of the game state
     '''
-    if self.n_correct_move < self.game_state['beg']:
+    if self.n_correct_move < self.bn_game_state['beg']:
       return 0
-    elif self.n_correct_move >= self.game_state['beg'] and self.n_correct_move < self.game_state['mid']:
+    elif self.n_correct_move >= self.bn_game_state['beg'] and self.n_correct_move < self.bn_game_state['mid']:
       return 1
     else:
       return 2
@@ -265,7 +265,7 @@ class Game(object):
 
 
   def add_info_bn_variables(self, dict):
-    self.bn_varibles_vect.append(dict.copy())
+    self.bn_variables_vect.append(dict.copy())
 
   def add_info_gen_vect(self, dict):
     self.move_info_gen_vect.append(dict.copy())
@@ -281,8 +281,7 @@ class Game(object):
       self.move_info_spec['from'] = ""
       self.move_info_spec['to'] = ""
       self.move_info_spec['user_action'] = self.map_user_action(outcome)
-      self.move_info_spec['user_react_time'] = self.map_react_time()
-
+      self.move_info_spec['user_react_time'] = self.map_user_react_time()
       self.move_info_spec['agent_assistance'] = self.agent_assistance
       self.move_info_spec['react_time'] = self.timeout
       self.move_info_spec['elapsed_time'] = 0
@@ -292,7 +291,7 @@ class Game(object):
       self.add_info_spec_vect(self.move_info_spec)
     else:
       self.move_info_spec['user_action'] = self.map_user_action(outcome)
-      self.move_info_spec['user_react_time'] = self.map_react_time()
+      self.move_info_spec['user_react_time'] = self.map_user_react_time()
       self.move_info_spec['game_state'] = self.get_game_state()  
       self.move_info_spec['token_id'] = self.detected_token[0]
       self.move_info_spec['from'] = self.detected_token[1]
@@ -334,18 +333,17 @@ class Game(object):
     return self.move_info_summary
 
   def store_bn_variables(self, outcome):
-    self.bn_varibles['game_state'] = self.map_game_state()
+    self.bn_variables['game_state'] = self.map_game_state()
+    self.bn_variables['attempt'] = self.n_attempt_per_token
+    self.bn_variables['user_react_time'] = self.map_user_react_time()
+    self.bn_variables['agent_assistance'] = 0
+    self.bn_variables['agent_feedback'] = 0
+    self.bn_variables['user_action'] = self.map_user_action(outcome)
+    self.bn_variables['user_reactivity'] = 0
+    self.bn_variables['user_memory'] = 0
+    self.add_info_bn_variables(self.bn_variables)
 
-    self.bn_varibles['attempt'] = self.n_attempt_per_token
-    self.bn_varibles['user_react_time'] = self.map_react_time()
-    self.bn_varibles['agent_assistance'] = 0
-    self.bn_varibles['agent_feedback'] = 0
-    self.bn_varibles['user_action'] = self.map_user_action(outcome)
-    self.bn_varibles['user_reactivity'] = 0
-    self.bn_varibles['user_memory'] = 0
-    self.add_info_bn_variables(self.bn_varibles)
-
-    return self.bn_varibles
+    return self.bn_variables
 
   def reset_counters_spec(self):
     self.react_time_per_token_spec_t1 = 0
