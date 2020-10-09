@@ -7,8 +7,10 @@ import pickle
 
 
 class Log():
-  def __init__(self, filename_spec, fieldnames_spec, filename_gen, fieldnames_gen, filename_sum, fieldnames_sum,
+  def __init__(self, filename_params, fieldnames_params, filename_spec, fieldnames_spec, filename_gen, fieldnames_gen, filename_sum, fieldnames_sum,
                filename_bn_vars, fieldnames_bn_vars):
+    self.filename_params = filename_params
+    self.fieldnames_params = fieldnames_params
     self.filename_spec = filename_spec
     self.filename_gen = filename_gen
     self.filename_sum = filename_sum
@@ -23,6 +25,7 @@ class Log():
       writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
       writer.writerow(data)
     csv_file.close()
+
 
   def save_bn_matrix(self, file_name,  bn_dict_vars):
 
