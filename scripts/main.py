@@ -271,7 +271,7 @@ class StateMachine(enum.Enum):
     return self.b_agent_outcome_finished
 
   def agent_move_correct_token(self, game, agent):
-    print("Robot moves the correct token as the user reached the max number of attempts")
+    print("Robot or Therapist  moves the correct token as the user reached the max number of attempts")
     # get the current solution
     token = game.get_token_sol()
     success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad")
@@ -542,7 +542,7 @@ def main():
                         "user_action": "user_action", "user_memory": "user_memory",
                         "user_reactivity": "user_reactivity"}
 
-  log = Log(file_params=file_params, fieldnames_params = entry_log_params,
+  log = Log(filename_params=file_params, fieldnames_params = entry_log_params,
             filename_spec=file_spec, fieldnames_spec=entry_log_spec, filename_gen=file_gen,
             fieldnames_gen = entry_log_gen, filename_sum = file_summary, fieldnames_sum = entry_log_summary,
             filename_bn_vars=file_bn_variables, fieldnames_bn_vars=entry_bn_variables)
