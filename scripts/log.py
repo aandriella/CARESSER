@@ -6,8 +6,12 @@ import pandas as pd
 
 
 class Log():
-  def __init__(self, filename_spec, fieldnames_spec, filename_gen, fieldnames_gen,
+  def __init__(self,
+                filename_params, fieldnames_params,
+               filename_spec, fieldnames_spec, filename_gen, fieldnames_gen,
                filename_sum, fieldnames_sum, filename_bn_vars, fieldnames_bn_vars):
+    self.filename_params = filename_params
+    self.fieldnames_params = fieldnames_params
     self.filename_spec = filename_spec
     self.filename_gen = filename_gen
     self.filename_sum = filename_sum
