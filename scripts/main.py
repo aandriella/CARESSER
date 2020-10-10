@@ -510,6 +510,7 @@ def main():
     print("Error the directory already exists")
     exit(0)
 
+  file_params = path_name + "/log_params.csv"
   file_spec = path_name + "/log_spec.csv"
   file_gen = path_name + "/log_gen.csv"
   file_summary = path_name + "/log_summary.csv"
@@ -520,31 +521,29 @@ def main():
   input = raw_input("Press a key to start:")
 
 
-
+  entry_log_params = {"user_id":"user_id", "session":"session", "with_feedback":"with_feedback", "objective":"objective", "timeout":"timeout"}
   entry_log_spec = {'game_state': 'game_state', 'user_react_time': 'user_react_time', 'user_action': 'user_action',
                     'token_id': 'token_id', 'from': 'from', 'to': 'to',
                     'agent_assistance': 'agent_assistance', "react_time": 'react_time',
                     'elapsed_time': 'elapsed_time', "attempt": 'attempt', "timeout": 'timeout',
                     "agent_feedback": 'agent_feedback'}
-
   entry_log_gen = {"token_id": 'token_id', 'user_action': 'user_action', "from": 'from', "to": 'to',
                    "avg_agent_assistance_per_move": 'avg_agent_assistance_per_move',
                    "cum_react_time": "cum_react_time", "cum_elapsed_time": "cum_elapsed_time",
                    "attempt": "attempt",
                    "timeout": "timeout", "agent_feedback": "agent_feedback"}
-
   entry_log_summary = {"n_attempt": "n_attempt", "n_timeout": "n_timeout", "n_sociable": "n_sociable",
                         "avg_lev_assistance": "avg_lev_assistance",
                           "tot_react_time": "tot_react_time",
                           "tot_elapsed_time": "tot_elapsed_time"}
-
   entry_bn_variables = {"game_state": "game_state", "attempt": "attempt", "user_react_time": "user_react_time",
                         "agent_assistance": "agent_assistance",
                         "agent_feedback": "agent_feedback",
                         "user_action": "user_action", "user_memory": "user_memory",
                         "user_reactivity": "user_reactivity"}
 
-  log = Log(filename_spec=file_spec, fieldnames_spec=entry_log_spec, filename_gen=file_gen,
+  log = Log(file_params=file_params, fieldnames_params = entry_log_params,
+            filename_spec=file_spec, fieldnames_spec=entry_log_spec, filename_gen=file_gen,
             fieldnames_gen = entry_log_gen, filename_sum = file_summary, fieldnames_sum = entry_log_summary,
             filename_bn_vars=file_bn_variables, fieldnames_bn_vars=entry_bn_variables)
 
@@ -552,6 +551,7 @@ def main():
   log.add_row_entry(log_filename=file_gen, fieldnames=entry_log_gen, data=entry_log_gen)
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log_summary)
   log.add_row_entry(log_filename=file_bn_variables, fieldnames=entry_bn_variables, data=entry_bn_variables)
+  log.add_row_entry(log_filename=file_params, fieldnames=entry_log_params, data=entry_log_params)
 
   sm = StateMachine(1)
 
