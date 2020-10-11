@@ -336,8 +336,8 @@ class Game(object):
     self.bn_variables['game_state'] = self.map_game_state()
     self.bn_variables['attempt'] = self.n_attempt_per_token
     self.bn_variables['user_react_time'] = self.map_user_react_time()
-    self.bn_variables['agent_assistance'] = 0
-    self.bn_variables['agent_feedback'] = 0
+    self.bn_variables['agent_assistance'] = self.agent_assistance
+    self.bn_variables['agent_feedback'] = self.agent_feedback
     self.bn_variables['user_action'] = self.map_user_action(outcome)
     self.bn_variables['user_reactivity'] = 0
     self.bn_variables['user_memory'] = 0
