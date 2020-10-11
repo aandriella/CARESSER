@@ -271,7 +271,7 @@ class StateMachine(enum.Enum):
     return self.b_agent_outcome_finished
 
   def agent_move_correct_token(self, game, agent):
-    print("Robot or Therapist  moves the correct token as the user reached the max number of attempts")
+    print(colored("Robot or Therapist  moves the correct token as the user reached the max number of attempts", "red"))
     # get the current solution
     token = game.get_token_sol()
     success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad")
@@ -279,7 +279,7 @@ class StateMachine(enum.Enum):
      pass
     print("Robot moved the token in the correct location")
     #input = raw_input("move the token in the correct position and press a button")
-    self.CURRENT_STATE = self.S_ROBOT_OUTCOME
+    self.CURRENT_STATE = self.S_ROBOT_ASSIST
     self.b_agent_moved_correct_token = True
     return self.b_agent_moved_correct_token
 
@@ -555,7 +555,7 @@ def main():
 
   sm = StateMachine(1)
 
-  #tiago_agent.instruction()
+  tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="happy")
 
   while game.get_n_correct_move() < game.task_length:
 
@@ -589,6 +589,7 @@ def main():
       game.reset_counters_spec()
       game.reset_detected_token()
 
+  tiago_agent.action["end_game"].__call__(facial_expression="happy")
   entry_log = game.store_info_summary()
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log)
 
