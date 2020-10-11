@@ -527,12 +527,12 @@ def main():
                     'agent_assistance': 'agent_assistance', "react_time": 'react_time',
                     'elapsed_time': 'elapsed_time', "attempt": 'attempt', "timeout": 'timeout',
                     "agent_feedback": 'agent_feedback'}
-  entry_log_gen = {"token_id": 'token_id', 'user_action': 'user_action', "from": 'from', "to": 'to',
+  entry_log_gen = {"game_state":"game_state","token_id": 'token_id', 'user_action': 'user_action', "from": 'from', "to": 'to',
                    "avg_agent_assistance_per_move": 'avg_agent_assistance_per_move',
                    "cum_react_time": "cum_react_time", "cum_elapsed_time": "cum_elapsed_time",
                    "attempt": "attempt",
-                   "timeout": "timeout", "agent_feedback": "agent_feedback"}
-  entry_log_summary = {"n_attempt": "n_attempt", "n_timeout": "n_timeout", "n_sociable": "n_sociable",
+                   "timeout": "timeout", "n_agent_feedback": "n_agent_feedback"}
+  entry_log_summary = {"n_attempt": "n_attempt", "n_timeout": "n_timeout", "n_agent_feedback": "n_agent_feedback",
                         "avg_lev_assistance": "avg_lev_assistance",
                           "tot_react_time": "tot_react_time",
                           "tot_elapsed_time": "tot_elapsed_time"}
