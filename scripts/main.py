@@ -136,10 +136,11 @@ class StateMachine(enum.Enum):
     print("R_FEEDBACK")
     game.n_sociable_per_token += 1
     game.n_tot_sociable += 1
+    game.agent_feedback = 1
     if game.detected_token[0] == game.solution[game.n_correct_move]:
       agent.action["pick"].__call__(positive=True, counter=game.n_attempt_per_token - 1, facial_expression="happy")
     else:
-      agent.action["pick"].__call__(positive=False, counter=game.n_attempt_per_token - 1, facial_expression="confused")
+      agent.action["pick"].__call__(positive=False, counter=game.n_attempt_per_token - 1, facial_expression="confused", eyes_coords=(0,-80))
     self.CURRENT_STATE = self.S_USER_PLACE
     self.agent_provided_feeback_finished = True
     return self.agent_provided_feeback_finished
@@ -165,10 +166,9 @@ class StateMachine(enum.Enum):
     token_sol = game.get_token_sol()
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
-    game.agent_assistance = random.randint(2, 3)
     delay_for_speech = 1
     game.agent_assistance = random.randint(0, 4)
-    success = agent.action["assistance"].__call__(lev_id=game.agent_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", tokens=tokens_subset, delay_for_speech=delay_for_speech)
+    success = agent.action["assistance"].__call__(lev_id=game.agent_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", eyes_coords=(0,0), tokens=tokens_subset, delay_for_speech=delay_for_speech)
 
     self.b_agent_assist_finished = True
     self.b_agent_reengaged_user == False
@@ -204,7 +204,7 @@ class StateMachine(enum.Enum):
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
       self.b_user_reached_timeout = False
       #self.play_sound("timeout_trim.mp3", 3)
-      agent.action["timeout"].__call__(counter=game.n_attempt_per_token - 1, facial_expression="sad")
+      agent.action["timeout"].__call__(counter=game.n_attempt_per_token - 1, facial_expression="sad", eyes_coords=(0,-80))
       game.outcome = 0
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
 
@@ -219,7 +219,7 @@ class StateMachine(enum.Enum):
       print(colored("TIMEOUT", 'red'))
       game.outcome = 0
       #self.play_sound("timeout_trim.mp3", 3)
-      agent.action["timeout"].__call__(counter=game.n_attempt_per_token - 1, facial_expression="sad")
+      agent.action["timeout"].__call__(counter=game.n_attempt_per_token - 1, facial_expression="sad", eyes_coords=(0,-80))
       self.CURRENT_STATE = self.S_USER_MOVE_TOKEN_BACK
       self.user_move_back(game, agent)
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
@@ -253,7 +253,7 @@ class StateMachine(enum.Enum):
         or game.detected_token[2] != game.solution.index(game.detected_token[0]) + 1:
       game.outcome = -1
       print("wrong_solution")
-      agent.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad")
+      agent.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad", eyes_coords=(0,-80))
       self.CURRENT_STATE = self.S_USER_MOVE_TOKEN_BACK
       #if agent replace with
       #self.agent_move_back(game, agent)
@@ -274,7 +274,7 @@ class StateMachine(enum.Enum):
     print(colored("Robot or Therapist  moves the correct token as the user reached the max number of attempts", "red"))
     # get the current solution
     token = game.get_token_sol()
-    success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad")
+    success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad", eyes_coords=(0, 30))
     while(game.detected_token != (token)):
      pass
     print("Robot moved the token in the correct location")
@@ -555,7 +555,8 @@ def main():
 
   sm = StateMachine(1)
 
-  tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="happy")
+  #tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="neutral")
+  #grospy.sleep(10)
 
   while game.get_n_correct_move() < game.task_length:
 
@@ -576,14 +577,15 @@ def main():
 
       if (game.outcome == 1 or (game.outcome == 0 and game.n_attempt_per_token == game.n_max_attempt_per_token)
           or (game.outcome == -1 and game.n_attempt_per_token == game.n_max_attempt_per_token)):
-        entry_log = game.store_info_gen()
-        log.add_row_entry(log_filename=file_gen, fieldnames=entry_log_gen, data=entry_log)
+        data_log_gen = game.store_info_gen()
+        log.add_row_entry(log_filename=file_gen, fieldnames=entry_log_gen, data=data_log_gen)
         game.reset_counters_gen()
 
-      entry_log = game.store_info_spec(game.outcome)
-      log.add_row_entry(log_filename=file_spec, fieldnames=entry_log_spec, data=entry_log)
+      data_log_spec = game.store_info_spec(game.outcome)
+      data_bn_variables = game.store_bn_variables(game.outcome)
+      log.add_row_entry(log_filename=file_spec, fieldnames=entry_log_spec, data=entry_log_spec)
       log.add_row_entry(log_filename=file_bn_variables, fieldnames=entry_bn_variables,
-                        data=game.store_bn_variables(game.outcome))
+                        data=data_bn_variables)
 
       sm.update_counters(game)
       game.reset_counters_spec()
