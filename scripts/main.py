@@ -473,7 +473,7 @@ def main():
     sentences_file = config_path+"/sentences_"+language
   elif language == "es_ES":
     sentences_file =  config_path+"/sentences_"+language
-  elif language == "cat":
+  elif language == "ca_ES":
     sentences_file =  config_path+"/sentences_"+language
   user_id = rospy.get_param("/user_id")
   with_feedback = rospy.get_param("/with_feedback")
@@ -495,7 +495,7 @@ def main():
   # we create the agent instance
   speech = Speech(language)
   face = Face()
-  gesture = None#Gesture()
+  gesture = Gesture()
   tiago_agent = Robot(speech, sentences_file, face, gesture)
 
   #user_id = raw_input("please, insert the id of the user:")
@@ -555,8 +555,8 @@ def main():
 
   sm = StateMachine(1)
 
-  #tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="neutral")
-  #grospy.sleep(10)
+  tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="neutral")
+  #rospy.sleep(10)
 
   while game.get_n_correct_move() < game.task_length:
 
