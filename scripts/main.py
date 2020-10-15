@@ -18,6 +18,7 @@ import rospy
 path = os.path.abspath(__file__)
 dir_path = os.path.dirname(path)
 parent_dir_of_file = os.path.dirname(dir_path)
+parent_dir_of_file = os.path.dirname(dir_path)
 parent_parent_dir_of_file = os.path.dirname(parent_dir_of_file)
 
 
@@ -68,7 +69,7 @@ class StateMachine(enum.Enum):
   def stop_sound(self):
     pygame.mixer.music.stop()
 
-  def caregiver_provide_assistance(self):
+  def caregiver_provide_assistance(self, game):
     '''
     Caregiver provides an action of assistance combining speech and gesture
     Return:
@@ -76,7 +77,11 @@ class StateMachine(enum.Enum):
     '''
     print("C_ASSISTANCE")
     rospy.sleep(0.1)
-    input = raw_input(colored("Please press a key when assistance has been provided",'green'))
+    if game.n_attempt_per_token == 1:
+      print("DO not OFFER ANY ASSISTANCE")
+    else:
+      input = raw_input(colored("Please press a key when assistance has been provided",'green'))
+
     self.b_caregiver_assist_finished = True
     self.b_caregiver_reengaged_user == False
     self.CURRENT_STATE = self.S_USER_ACTION
@@ -197,7 +202,7 @@ class StateMachine(enum.Enum):
       if not game.check_board():
         print(colored("BOARD HAS TO BE RESET", 'yellow'))
       while not game.check_board():
-        print(game.current_board)
+        print("detected_token!=[] and timeout")
         game.current_board = game.get_board_event()
         #self.play_sound("something_went_wrong_trim.mp3", 1)
 
@@ -498,17 +503,16 @@ def main():
     if sm.CURRENT_STATE.value == sm.S_CAREGIVER_ASSIST.value:
       rospy.sleep(0.1)
       while not game.check_board():
-
-        print(game.current_board)
+        print("in offer assistance")
         game.current_board = game.get_board_event()
         #sm.play_sound("something_went_wrong_trim.mp3", 1)
 
-      sm.caregiver_provide_assistance()
+      sm.caregiver_provide_assistance(game)
       game.avg_caregiver_assistance_per_move += game.caregiver_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
       while not game.check_board() and not sm.b_user_reached_timeout:
-        print(game.current_board)
+        print("In user has to move")
         #sm.play_sound("something_went_wrong_trim.mp3", 1)
 
       print("Expected token ", game.solution[game.get_n_correct_move()])
