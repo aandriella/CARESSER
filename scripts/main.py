@@ -80,7 +80,8 @@ class StateMachine(enum.Enum):
     if game.n_attempt_per_token == 1:
       print("DO not OFFER ANY ASSISTANCE")
     else:
-      input = raw_input(colored("Please press a key when assistance has been provided",'green'))
+      #input = raw_input(colored("Please press a key when assistance has been provided",'green'))
+      print("CAREGIVER OFFER ASSISTANCE")
 
     self.b_caregiver_assist_finished = True
     self.b_caregiver_reengaged_user == False
@@ -189,7 +190,6 @@ class StateMachine(enum.Enum):
         self.play_sound("max_attempt_trim.mp3", 3)
         self.caregiver_move_correct_token(game)
 
-
     elif game.detected_token != [] and self.b_user_reached_timeout:
       print(colored("TIMEOUT game detected !=[]", 'red'))
       print(game.detected_token)
@@ -236,8 +236,9 @@ class StateMachine(enum.Enum):
         print(colored("Max attempt reached", "red"))
         self.S_CAREGIVER_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
-        self.caregiver_move_correct_token(game)
         self.play_sound("max_attempt_trim.mp3", 3)
+        self.caregiver_move_correct_token(game)
+
 
     self.b_caregiver_outcome_finished = True
     return self.b_caregiver_outcome_finished
