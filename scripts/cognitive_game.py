@@ -285,7 +285,7 @@ class Game(object):
       self.move_info_spec['caregiver_assistance'] = self.caregiver_assistance
       self.move_info_spec['react_time'] = self.timeout
       self.move_info_spec['elapsed_time'] = 0
-      self.move_info_spec['attempt'] = self.n_attempt_per_token
+      self.move_info_spec['attempt'] = self.n_attempt_per_token-1
       self.move_info_spec['caregiver_feedback'] = self.n_sociable_per_token
       self.move_info_spec['timeout'] = self.n_timeout_per_token
       self.add_info_spec_vect(self.move_info_spec)
@@ -299,7 +299,7 @@ class Game(object):
       self.move_info_spec['caregiver_assistance'] = self.caregiver_assistance
       self.move_info_spec['react_time'] = round(self.react_time_per_token_spec_t1, 3)
       self.move_info_spec['elapsed_time'] = round(self.elapsed_time_per_token_spec_t1, 3)
-      self.move_info_spec['attempt'] = self.n_attempt_per_token
+      self.move_info_spec['attempt'] = self.n_attempt_per_token-1
       self.move_info_spec['caregiver_feedback'] = self.n_sociable_per_token
       self.move_info_spec['timeout'] = self.n_timeout_per_token
       self.add_info_spec_vect(self.move_info_spec)
