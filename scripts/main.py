@@ -458,10 +458,7 @@ def main():
   file_gen = path_name + "/log_gen.csv"
   file_summary = path_name + "/log_summary.csv"
   file_bn_variables = path_name+"/bn_variables.csv"
-  bn_belief_user_action_file = path_name + "/bn_belief_user_action.pkl"
-  bn_belief_user_react_time_file = path_name + "/bn_belief_user_react_time.pkl"
-  bn_belief_caregiver_assistive_action = path_name + "/bn_belief_caregiver_assistive_action.pkl"
-  bn_belief_caregiver_feedback_action = path_name + "/bn_belief_caregiver_feedback_action.pkl"
+
 
   entry_log_spec = {'game_state':'game_state', 'user_react_time':'user_react_time', 'user_action':'user_action', 'token_id':'token_id', 'from':'from', 'to':'to',
                     'caregiver_assistance':'caregiver_assistance', "react_time":'react_time',
@@ -542,10 +539,7 @@ def main():
 
   entry_log = game.store_info_summary()
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log)
-  log.save_bn_matrix(file_name=bn_belief_user_action_file, bn_dict_vars=game.bn_dict_vars_user_action)
-  log.save_bn_matrix(file_name=bn_belief_user_react_time_file, bn_dict_vars=game.bn_dict_vars_user_action)
-  log.save_bn_matrix(file_name=bn_belief_caregiver_assistive_action, bn_dict_vars=game.bn_dict_vars_caregiver_assistance)
-  log.save_bn_matrix(file_name=bn_belief_caregiver_feedback_action, bn_dict_vars=game.bn_dict_vars_caregiver_feedback)
+
 
   for instance_spec in game.move_info_spec_vect:
     print(instance_spec)
