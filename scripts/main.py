@@ -12,6 +12,8 @@ from robot_behaviour.gesture_reproducer import Gesture
 # import from libraries
 import enum
 import random
+import itertools
+
 import time
 import os
 from termcolor import colored
@@ -78,7 +80,7 @@ class StateMachine(enum.Enum):
     print("Update_counters")
 
     if game.moved_back:
-      if game.outcome == 0:
+      if game.outcome == 2:
         game.n_timeout_per_token +=1
 
       print("token has been moved back, DO nothing")
@@ -94,7 +96,7 @@ class StateMachine(enum.Enum):
         game.n_sociable_per_token = 0
         game.n_timeout_per_token = 0
 
-    elif game.outcome == 0:
+    elif game.outcome == 2:
       game.n_timeout_per_token += 1
       game.n_mistakes += 1
       game.n_attempt_per_token += 1
@@ -110,13 +112,13 @@ class StateMachine(enum.Enum):
         game.n_timeout_per_token = 0
 
     # get current move and check if it is the one expeceted in the solution list
-    elif game.outcome == 1:
+    elif game.outcome == 0:
       game.set_n_correct_move(game.get_n_correct_move() + 1)
       game.set_n_attempt_per_token(1)
       game.n_sociable_per_token = 0
       game.n_timeout_per_token = 0
 
-    elif game.outcome == -1:
+    elif game.outcome == 2:
       print("wrong_solution")
       game.n_mistakes += 1
       game.n_attempt_per_token += 1
@@ -145,7 +147,7 @@ class StateMachine(enum.Enum):
     self.agent_provided_feeback_finished = True
     return self.agent_provided_feeback_finished
 
-  def agent_provide_assistance(self, game, agent):
+  def agent_provide_assistance(self, game, agent, state_index, epsilon):
     '''
     Robot action of assistance combining speech and gesture
     Args:
@@ -167,15 +169,13 @@ class StateMachine(enum.Enum):
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
     delay_for_speech = 1
-    game.agent_assistance = random.randint(0, 4)
+    game.agent_assistance = agent.get_irl_state_action(state_index=state_index, epsilon=epsilon)
     success = agent.action["assistance"].__call__(lev_id=game.agent_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", eyes_coords=(0,0), tokens=tokens_subset, delay_for_speech=delay_for_speech)
 
     self.b_agent_assist_finished = True
     self.b_agent_reengaged_user == False
     self.CURRENT_STATE = self.S_USER_ACTION
     return self.b_agent_assist_finished
-
-
 
   def agent_provide_outcome(self, game, agent):
     '''
@@ -187,7 +187,7 @@ class StateMachine(enum.Enum):
 
     if game.moved_back and not self.b_user_reached_timeout:
       print(colored("token has been moved back, DO nothing", 'red'))
-      game.outcome = -1
+      game.outcome = 1
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
 
       # check if the user reached his max number of attempts
@@ -196,16 +196,15 @@ class StateMachine(enum.Enum):
         self.S_ROBOT_MOVE_CORRECT_TOKEN = True
         self.b_user_reached_max_attempt = True
         self.agent_move_correct_token(game, agent)
-        game.outcome = 1
 
     elif (game.detected_token == [] or game.detected_token==()) and self.b_user_reached_timeout:
       print(colored("TIMEOUT", 'red'))
-      game.outcome = 0
+      game.outcome = 2
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
       self.b_user_reached_timeout = False
       #self.play_sound("timeout_trim.mp3", 3)
       agent.action["timeout"].__call__(counter=game.n_attempt_per_token - 1, facial_expression="sad", eyes_coords=(0,-80))
-      game.outcome = 0
+      game.outcome = 2
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
 
       # check if the user reached his max number of attempts
@@ -217,7 +216,7 @@ class StateMachine(enum.Enum):
 
     elif game.detected_token != [] and self.b_user_reached_timeout:
       print(colored("TIMEOUT", 'red'))
-      game.outcome = 0
+      game.outcome = 2
       #self.play_sound("timeout_trim.mp3", 3)
       agent.action["timeout"].__call__(counter=game.n_attempt_per_token - 1, facial_expression="sad", eyes_coords=(0,-80))
       self.CURRENT_STATE = self.S_USER_MOVE_TOKEN_BACK
@@ -245,13 +244,13 @@ class StateMachine(enum.Enum):
     elif game.detected_token[0] == game.solution[game.n_correct_move] \
         and game.detected_token[2] == (game.solution.index(game.detected_token[0]) + 1):
       agent.action["congrats"].__call__(counter=game.n_attempt_per_token-1, facial_expression="happy")
-      game.outcome = 1
+      game.outcome = 0
       print("correct_solution ", game.get_n_correct_move())
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
 
     elif game.detected_token[0] != game.solution[game.n_correct_move] \
         or game.detected_token[2] != game.solution.index(game.detected_token[0]) + 1:
-      game.outcome = -1
+      game.outcome = 1
       print("wrong_solution")
       agent.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad", eyes_coords=(0,-80))
       self.CURRENT_STATE = self.S_USER_MOVE_TOKEN_BACK
@@ -348,7 +347,11 @@ class StateMachine(enum.Enum):
       detected_token, picked, _, _ = game.get_move_event()
       speech_ended = True
       agent.reset_speech_ended()
+      # agent_offered_assistance = False
       while (not picked and (detected_token == [])):
+        # if (time.time()-game.react_time_per_token_spec_t0)>5 and (time.time()-game.react_time_per_token_spec_t0)<10 and not agent_offered_assistance:
+        #   sm.agent_provide_assistance(game, agent)
+        #   agent_offered_assistance = True
         #check here if the speech has ended if so trigger the counter
         if check_move_timeout(game, game.react_time_per_token_spec_t0):
           if speech_ended and agent.has_speech_ended():
@@ -481,22 +484,36 @@ def main():
   session_id = rospy.get_param("/session_id")
   timeout = rospy.get_param("/timeout")
 
+  bn_game_state = {'beg': 2, 'mid': 4, 'end': 5}
+  bn_attempt = {'att_1': 0, 'att_2': 1, 'att_3': 2, 'att_4': 3}
+  bn_agent_assistance = {'lev_0': 0, 'lev_1': 1, 'lev_2': 2, 'lev_3': 3, 'lev_4': 4, 'lev_5': 5}
+  bn_user_react_time = {'fast': 5, 'normal': 10, 'slow': 15}
+  bn_user_action = {'correct': 0, 'wrong': 1, 'timeout': 2}
+
   # we create the game instance
   game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4,
               timeout = timeout, objective = objective, sociable = with_feedback,
-              bn_game_state = {'beg': 2, 'mid': 4,'end': 5},
-              bn_attempt = {'att_1': 0, 'att_2': 1, 'att_3': 2, 'att_4': 3},
-              bn_agent_feedback = {'no': 0,'yes': 1},
-              bn_agent_assistance = {'lev_0': 0,'lev_1': 1,'lev_2': 2,'lev_3': 3,'lev_4': 4, 'lev_5': 5},
-              bn_user_react_time = {'fast': 5, 'normal': 10, 'slow': 15},
-              bn_user_action = {'correct': 0, 'wrong': 1, 'timeout': 2})
+              bn_game_state = bn_game_state,
+              bn_attempt = bn_attempt,
+              bn_agent_assistance = bn_agent_assistance,
+              bn_user_react_time = bn_user_react_time,
+              bn_user_action = bn_user_action)
 
+  attempt = [i for i in range(1,len(bn_attempt) + 1)]
+  # +1 (3,_,_) absorbing state
+  game_state = [i for i in range(0, len(bn_game_state) + 1)]
+  user_action = [i for i in range(0, len(bn_user_action))]
+  state_space = (game_state, attempt, user_action)
+  states_space_list = list(itertools.product(*state_space))
+  state_space_index = [states_space_list.index(tuple(s)) for s in states_space_list]
 
   # we create the agent instance
   speech = Speech(language)
   face = Face()
-  gesture = Gesture()
-  tiago_agent = Robot(speech, sentences_file, face, gesture)
+  gesture = None#Gesture()
+  policy_filename = "/home/pal/Documents/Framework/GenerativeMutualShapingRL/results/1/learned_policy.pkl"
+  tiago_agent = Robot(speech, sentences_file, policy_filename, face, gesture)
+
 
   #user_id = raw_input("please, insert the id of the user:")
   path = os.path.abspath(__file__)
@@ -555,18 +572,21 @@ def main():
 
   sm = StateMachine(1)
 
-  tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="neutral")
-  #rospy.sleep(10)
+  #tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="neutral")
 
   while game.get_n_correct_move() < game.task_length:
+    current_state=(game.map_game_state(), game.n_attempt_per_token, game.outcome)
+    print(current_state)
 
     if sm.CURRENT_STATE.value == sm.S_ROBOT_ASSIST.value:
-      sm.agent_provide_assistance(game, tiago_agent)
+      sm.CURRENT_STATE = sm.S_USER_ACTION
+      sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.1)
       game.avg_agent_assistance_per_move += game.agent_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
       print("Expected token ", game.solution[game.get_n_correct_move()])
       time_to_act = time.time()
+
       game.with_feedback = 1#random.randint(0,1)
       sm.user_action(game, tiago_agent)
       game.total_elapsed_time += time.time() - time_to_act
@@ -575,8 +595,8 @@ def main():
       # these are reported only because the variables are already reset when a correct move occurred
       sm.agent_provide_outcome(game, tiago_agent)
 
-      if (game.outcome == 1 or (game.outcome == 0 and game.n_attempt_per_token == game.n_max_attempt_per_token)
-          or (game.outcome == -1 and game.n_attempt_per_token == game.n_max_attempt_per_token)):
+      if (game.outcome == 0 or (game.outcome == 2 and game.n_attempt_per_token == game.n_max_attempt_per_token)
+          or (game.outcome == 1 and game.n_attempt_per_token == game.n_max_attempt_per_token)):
         data_log_gen = game.store_info_gen()
         log.add_row_entry(log_filename=file_gen, fieldnames=entry_log_gen, data=data_log_gen)
         game.reset_counters_gen()
