@@ -4,7 +4,7 @@ from board_state.msg import BoardMsg
 
 class Game(object):
   def __init__(self, board_size, task_length, n_max_attempt_per_token, timeout, objective, sociable,
-               bn_game_state, bn_attempt, bn_agent_feedback, bn_agent_assistance, bn_user_react_time,
+               bn_game_state, bn_attempt, bn_agent_assistance, bn_user_react_time,
                bn_user_action):
     rospy.init_node('big_hero', anonymous=True)
     # subscriber for getting info from the board
@@ -63,7 +63,6 @@ class Game(object):
     self.bn_game_state = bn_game_state
     self.bn_attempt = bn_attempt
     self.bn_agent_assistance = bn_agent_assistance
-    self.bn_agent_feedback = bn_agent_feedback
 
 
   def get_board_event_callback(self, msg):
