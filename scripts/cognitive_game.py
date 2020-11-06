@@ -37,7 +37,7 @@ class Game(object):
     self.n_mistakes = 0
     self.n_correct_move = 0
     #subscriber variables from detect_move
-    self.detected_token = ()
+    self.detected_token = []
     self.picked = False
     self.placed = False
     self.moved_back = False
@@ -118,13 +118,28 @@ class Game(object):
 
 
   def check_board(self):
-    '''this method checks if all the tokens are on the board if notask the user to place it correctly'''
+    '''this method checks if all the tokens are on the board if not the user to place it correctly'''
     n_tokens_on_board = self.current_board.count('0')
     if n_tokens_on_board!= self.task_length:
       print("ask the caregiver to do something")
       return False
     else:
       return True
+
+  def check_unexpected_move(self):
+    solution_so_far = self.solution[:self.n_correct_move]
+    if solution_so_far!=[]:
+      possible_tokens = list(set(self.initial_board)-set(["0"])-set(solution_so_far))
+    else:
+      possible_tokens = list(set(self.initial_board)-set(["0"]))
+    if any(elem in possible_tokens for elem in self.get_board_event()[0:5]):
+      print("Something happens a token has been moved...")
+      token_id = self.get_board_event()[self.n_correct_move]
+      self.detected_token = (token_id,self.get_token_init_loc(token_id)[1], self.n_correct_move+1)
+      self.react_time_per_token_spec_t1 = 0
+      return True
+    else:
+      return False
 
 
   def map_user_action(self, outcome):
@@ -143,7 +158,7 @@ class Game(object):
     Return:
       0 if slow 1a if normal 2 if fast
     '''
-    if self.react_time_per_token_spec_t1>0 and self.react_time_per_token_spec_t1<self.bn_user_react_time['fast']:
+    if self.react_time_per_token_spec_t1>=0 and self.react_time_per_token_spec_t1<self.bn_user_react_time['fast']:
       return 2
     elif self.react_time_per_token_spec_t1>=self.bn_user_react_time['fast'] and self.react_time_per_token_spec_t1<self.bn_user_react_time['normal']:
       return 1
