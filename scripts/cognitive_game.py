@@ -274,7 +274,7 @@ class Game(object):
 
   def store_info_spec(self, outcome):
     #timeout
-    if outcome==0:
+    if outcome==2:
       self.move_info_spec['game_state'] = self.get_game_state()
       self.move_info_spec['token_id'] = ""
       self.move_info_spec['from'] = ""
