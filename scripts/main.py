@@ -114,7 +114,6 @@ class StateMachine(enum.Enum):
         self.n_timeout_per_token = 0
 
 
-
     elif game.outcome == 0:
       game.n_timeout_per_token += 1
       game.n_mistakes += 1
@@ -505,8 +504,19 @@ def main():
         game.current_board = game.get_board_event()
         #sm.play_sound("something_went_wrong_trim.mp3", 1)
 
-      sm.caregiver_provide_assistance(game)
-      game.avg_caregiver_assistance_per_move += game.caregiver_assistance
+      #check if something has happened that we do not expect:
+      expected_token = game.get_token_sol()
+      print("Check if expected token has been moved")
+      if game.check_unexpected_move():
+        sm.CURRENT_STATE = sm.S_CAREGIVER_OUTCOME
+      # if (expected_token[0]) in (game.get_board_event())[0:5]:
+      #   print("expected token is already on the board:", expected_token)
+      #   game.detected_token = expected_token
+      #   game.react_time_per_token_spec_t1 = 0
+      #   sm.CURRENT_STATE = sm.S_CAREGIVER_OUTCOME
+      else:
+        sm.caregiver_provide_assistance(game)
+        game.avg_caregiver_assistance_per_move += game.caregiver_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
       while not game.check_board() and not sm.b_user_reached_timeout:
