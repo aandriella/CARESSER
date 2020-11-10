@@ -279,7 +279,7 @@ class Game(object):
       self.move_info_spec['token_id'] = ""
       self.move_info_spec['from'] = ""
       self.move_info_spec['to'] = ""
-      self.move_info_spec['user_action'] = self.map_user_action(outcome)
+      self.move_info_spec['user_action'] = outcome
       self.move_info_spec['user_react_time'] = self.map_user_react_time()
       self.move_info_spec['agent_assistance'] = self.agent_assistance
       self.move_info_spec['react_time'] = self.timeout
@@ -289,7 +289,7 @@ class Game(object):
       self.move_info_spec['timeout'] = self.n_timeout_per_token
       self.add_info_spec_vect(self.move_info_spec)
     else:
-      self.move_info_spec['user_action'] = self.map_user_action(outcome)
+      self.move_info_spec['user_action'] = outcome
       self.move_info_spec['user_react_time'] = self.map_user_react_time()
       self.move_info_spec['game_state'] = self.get_game_state()  
       self.move_info_spec['token_id'] = self.detected_token[0]
@@ -321,7 +321,6 @@ class Game(object):
 
   def store_info_summary(self):
     entry_log_summary = ["n_attempt", "n_sociable", "avg_lev_assistance", "tot_react_time", "tot_elapsed_time"]
-
     self.move_info_summary["n_attempt"] = sum([elem['attempt'] for elem in self.move_info_gen_vect])
     self.move_info_summary["n_timeout"] = sum([elem['timeout'] for elem in self.move_info_gen_vect])
     self.move_info_summary["n_agent_feedback"] = sum([elem['n_agent_feedback'] for elem in self.move_info_gen_vect])
@@ -337,7 +336,7 @@ class Game(object):
     self.bn_variables['user_react_time'] = self.map_user_react_time()
     self.bn_variables['agent_assistance'] = self.agent_assistance
     self.bn_variables['agent_feedback'] = self.agent_feedback
-    self.bn_variables['user_action'] = self.map_user_action(outcome)
+    self.bn_variables['user_action'] = outcome
     self.bn_variables['user_reactivity'] = 0
     self.bn_variables['user_memory'] = 0
     self.add_info_bn_variables(self.bn_variables)
