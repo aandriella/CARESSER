@@ -118,7 +118,7 @@ class StateMachine(enum.Enum):
       game.n_sociable_per_token = 0
       game.n_timeout_per_token = 0
 
-    elif game.outcome == 2:
+    elif game.outcome == 1:
       print("wrong_solution")
       game.n_mistakes += 1
       game.n_attempt_per_token += 1
@@ -238,7 +238,6 @@ class StateMachine(enum.Enum):
         self.b_user_reached_max_attempt = True
         #self.play_sound("max_attempt_trim.mp3", 3)
         self.agent_move_correct_token(game, agent)
-
 
     # get current move and check if it is the one expeceted in the solution list
     elif game.detected_token[0] == game.solution[game.n_correct_move] \
@@ -510,8 +509,8 @@ def main():
   # we create the agent instance
   speech = Speech(language)
   face = Face()
-  gesture = None#Gesture()
-  policy_filename = "/home/pal/Documents/Framework/GenerativeMutualShapingRL/results/1/learned_policy.pkl"
+  gesture = Gesture()
+  policy_filename = "/home/pal/Documents/Framework/GenerativeMutualShapingRL/results/1/True/1/policy.pkl"
   tiago_agent = Robot(speech, sentences_file, policy_filename, face, gesture)
 
 
@@ -570,6 +569,10 @@ def main():
   log.add_row_entry(log_filename=file_bn_variables, fieldnames=entry_bn_variables, data=entry_bn_variables)
   log.add_row_entry(log_filename=file_params, fieldnames=entry_log_params, data=entry_log_params)
 
+
+  data_log_params = {"user_id":user_id, "session":session_id, "with_feedback":with_feedback, "objective":objective, "timeout":timeout}
+  log.add_row_entry(log_filename=file_params, fieldnames=entry_log_params, data=data_log_params)
+
   sm = StateMachine(1)
 
   #tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="neutral")
@@ -587,7 +590,7 @@ def main():
       print("Expected token ", game.solution[game.get_n_correct_move()])
       time_to_act = time.time()
 
-      game.with_feedback = 1#random.randint(0,1)
+      #game.with_feedback = 1#random.randint(0,1)
       sm.user_action(game, tiago_agent)
       game.total_elapsed_time += time.time() - time_to_act
 
@@ -603,7 +606,7 @@ def main():
 
       data_log_spec = game.store_info_spec(game.outcome)
       data_bn_variables = game.store_bn_variables(game.outcome)
-      log.add_row_entry(log_filename=file_spec, fieldnames=entry_log_spec, data=entry_log_spec)
+      log.add_row_entry(log_filename=file_spec, fieldnames=entry_log_spec, data=data_log_spec)
       log.add_row_entry(log_filename=file_bn_variables, fieldnames=entry_bn_variables,
                         data=data_bn_variables)
 
@@ -612,8 +615,8 @@ def main():
       game.reset_detected_token()
 
   tiago_agent.action["end_game"].__call__(facial_expression="happy")
-  entry_log = game.store_info_summary()
-  log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=entry_log)
+  data_log_summary = game.store_info_summary()
+  log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=data_log_summary)
 
   for instance_spec in game.move_info_spec_vect:
     print(instance_spec)
