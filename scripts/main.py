@@ -226,12 +226,13 @@ class StateMachine(enum.Enum):
 
       if not game.check_board():
         print(colored("BOARD HAS TO BE RESET", 'red'))
+
       while not game.check_board():
         print(game.current_board)
         game.current_board = game.get_board_event()
-        self.play_sound("something_went_wrong_trim.mp3", 1)
-
+        #self.play_sound("something_went_wrong_trim.mp3", 1)
         # check if the user reached his max number of attempts
+
       if game.n_attempt_per_token >= game.n_max_attempt_per_token:
         print(colored("Max attempt reached", 'red'))
         self.S_ROBOT_MOVE_CORRECT_TOKEN = True
@@ -269,7 +270,7 @@ class StateMachine(enum.Enum):
     return self.b_agent_outcome_finished
 
   def agent_move_correct_token(self, game, agent):
-    print(colored("Robot or Therapist  moves the correct token as the user reached the max number of attempts", "red"))
+    print(colored("Robot or Therapist moves the correct token as the user reached the max number of attempts", "red"))
     # get the current solution
     token = game.get_token_sol()
     success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad", eyes_coords=(0, 30))
@@ -304,9 +305,16 @@ class StateMachine(enum.Enum):
       #means you have the token in your hand
       token_to = token_from
     curr_token_id, _, curr_token_to = game.detected_token
-
+    time_elapsed = 0
+    current_time = time.time()
     while (curr_token_id == token_id and curr_token_to != token_from):
       curr_token_id, _, curr_token_to = game.detected_token
+      time_elapsed = time.time() - current_time
+      if time_elapsed >= 5.0:
+        success = agent.action["move_back"].__call__(who="user", token=game.get_token_sol(),
+                                                     counter=game.n_attempt_per_token - 1, facial_expression="neutral")
+
+        current_time = time.time()
 
     print(colored("User moved back the token in its initial location", 'red'))
     self.CURRENT_STATE = self.S_ROBOT_ASSIST
