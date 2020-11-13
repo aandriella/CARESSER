@@ -468,9 +468,9 @@ def main():
   entry_log_summary = {"n_attempt":"n_attempt", "n_timeout":"n_timeout", "n_sociable":"n_sociable",
                        "avg_lev_assistance":"avg_lev_assistance", "tot_react_time":"tot_react_time",
                        "tot_elapsed_time":"tot_elapsed_time"}
-  entry_bn_variables = {"game_state":"game_state","attempt":"attempt", "user_react_time":"user_react_time",
-                        "agent_assistance":"agent_assistance", "agent_feedback":"agent_feedback",
-                        "user_action":"user_action", "user_memory":"user_memory", "user_reactivity":"user_reactivity"}
+  entry_bn_variables = {"game_state":"game_state","attempt":"attempt",
+                        "agent_assistance":"agent_assistance",
+                        "user_action":"user_action"}
 
   entry_params = {"user_id":"user_id", "session":"session", "with_feedback":"with_feedback", "objective":"objective", "timeout":"timeout"}
 
