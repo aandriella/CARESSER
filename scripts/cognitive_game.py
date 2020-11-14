@@ -278,7 +278,7 @@ class Game(object):
 
   def store_bn_variables(self, outcome):
     self.bn_varibles['game_state'] = self.map_game_state()
-    self.bn_varibles['attempt'] = self.n_attempt_per_token
+    self.bn_varibles['attempt'] = self.n_attempt_per_token-1
     self.bn_varibles['agent_assistance'] = 0
     self.bn_varibles['user_action'] = self.map_user_action(outcome)
     self.add_info_bn_variables(self.bn_varibles)
