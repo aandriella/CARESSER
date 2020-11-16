@@ -160,8 +160,8 @@ class StateMachine(enum.Enum):
     if agent.get_action_state() == 1 or agent.get_action_state() == 0:
       agent.cancel_action()
 
-    if agent.get_action_state() == 0:
-      agent.cancel_action()
+    # if agent.get_action_state() == 0:
+    #   agent.cancel_action()
 
     print(colored("R_ASSISTANCE", 'green'))
     #recall all the information you may need for providing assistance
@@ -169,9 +169,13 @@ class StateMachine(enum.Enum):
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
     delay_for_speech = 1
-    game.agent_assistance = agent.get_irl_state_action(state_index=state_index, epsilon=epsilon)
-    success = agent.action["assistance"].__call__(lev_id=game.agent_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", eyes_coords=(0,0), tokens=tokens_subset, delay_for_speech=delay_for_speech)
+    game.agent_assistance = 4#agent.get_irl_state_action(state_index=state_index, epsilon=epsilon)
+    if game.agent_assistance == 3:
+      delay_for_speech = 0
+    elif game.agent_assistance == 4:
+      delay_for_speech = 2.5
 
+    success = agent.action["assistance"].__call__(lev_id=game.agent_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", eyes_coords=(0,0), tokens=tokens_subset, delay_for_speech=delay_for_speech)
     self.b_agent_assist_finished = True
     self.b_agent_reengaged_user == False
     self.CURRENT_STATE = self.S_USER_ACTION
@@ -266,6 +270,7 @@ class StateMachine(enum.Enum):
         self.b_user_reached_max_attempt = True
         self.agent_move_correct_token(game, agent)
 
+    agent.reset_facial_expression()
     self.b_agent_outcome_finished = True
     return self.b_agent_outcome_finished
 
@@ -518,21 +523,21 @@ def main():
   speech = Speech(language)
   face = Face()
   gesture = Gesture()
-  policy_filename = "/home/pal/Documents/Framework/GenerativeMutualShapingRL/results/1/True/1/policy.pkl"
-  tiago_agent = Robot(speech, sentences_file, policy_filename, face, gesture)
-
-
-  #user_id = raw_input("please, insert the id of the user:")
   path = os.path.abspath(__file__)
   dir_path = os.path.dirname(path)
   parent_dir_of_file = os.path.dirname(dir_path)
-  path_name = parent_dir_of_file + "/robot_in_the_loop/log/" + str(user_id) + "/" + str(with_feedback) + "/" + str(session_id)
 
-  try:
+  policy_filename = parent_dir_of_file+"/robot-patient-interaction/"+str(user_id)+"/"+str(with_feedback)+"/"+str(session_id)+"/policy.pkl"
+  tiago_agent = Robot(speech, sentences_file, policy_filename, face, gesture)
+  path_name = parent_dir_of_file + "/robot-patient-interaction/" + str(user_id) + "/" + str(with_feedback) + "/" + str(session_id)
+  tiago_agent.reset_facial_expression()
+  tiago_agent.send_to_rest()
+
+  if not os.path.exists(path_name):
     os.makedirs(path_name)
-  except IOError:
+  else:
     print("Error the directory already exists")
-    exit(0)
+    input = raw_input("Would you like to continue anyway?")
 
   file_params = path_name + "/log_params.csv"
   file_spec = path_name + "/log_spec.csv"
@@ -560,11 +565,9 @@ def main():
                         "avg_lev_assistance": "avg_lev_assistance",
                           "tot_react_time": "tot_react_time",
                           "tot_elapsed_time": "tot_elapsed_time"}
-  entry_bn_variables = {"game_state": "game_state", "attempt": "attempt", "user_react_time": "user_react_time",
+  entry_bn_variables = {"game_state": "game_state", "attempt": "attempt",
                         "agent_assistance": "agent_assistance",
-                        "agent_feedback": "agent_feedback",
-                        "user_action": "user_action", "user_memory": "user_memory",
-                        "user_reactivity": "user_reactivity"}
+                        "user_action": "user_action"}
 
   log = Log(filename_params=file_params, fieldnames_params = entry_log_params,
             filename_spec=file_spec, fieldnames_spec=entry_log_spec, filename_gen=file_gen,
@@ -590,9 +593,15 @@ def main():
     print(current_state)
 
     if sm.CURRENT_STATE.value == sm.S_ROBOT_ASSIST.value:
-      sm.CURRENT_STATE = sm.S_USER_ACTION
-      sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.1)
-      game.avg_agent_assistance_per_move += game.agent_assistance
+
+      expected_token = game.get_token_sol()
+      print("check if expected token has been moved")
+      if game.check_unexpected_move():
+        sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
+      else:
+        sm.CURRENT_STATE = sm.S_USER_ACTION
+        sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.1)
+        game.avg_agent_assistance_per_move += game.agent_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
       print("Expected token ", game.solution[game.get_n_correct_move()])
