@@ -90,13 +90,26 @@ class Game(object):
   def check_board(self):
     '''this method checks if all the tokens are on the board if notask the user to place it correctly'''
     n_tokens_on_board = self.current_board.count('0')
-
     if n_tokens_on_board != self.task_length:
       print("ask the caregiver to do something")
       return False
     else:
       return True
 
+  def check_unexpected_move(self):
+    solution_so_far = self.solution[:self.n_correct_move]
+    if solution_so_far!=[]:
+      possible_tokens = list(set(self.initial_board)-set(["0"])-set(solution_so_far))
+    else:
+      possible_tokens = list(set(self.initial_board)-set(["0"]))
+    if any(elem in possible_tokens for elem in self.get_board_event()[0:5]):
+      print("Something happens a token has been moved...")
+      token_id = self.get_board_event()[self.n_correct_move]
+      self.detected_token = (token_id, self.get_token_init_loc(token_id)[1], self.n_correct_move+1)
+      self.react_time_per_token_spec_t1 = 0
+      return True
+    else:
+      return False
 
   def map_user_action(self, outcome):
     if outcome == -1:
@@ -210,8 +223,7 @@ class Game(object):
   def get_token_init_loc(self, token_id):
     '''This method returns the  token   initial location on the board'''
 
-    token_from = [index for index in range(len(self.initial_board)) if
-                     +                     self.initial_board[index] == token_id].pop() + 1
+    token_from = [index for index in range(len(self.initial_board)) if self.initial_board[index] == token_id].pop() + 1
     return (token_id, token_from)
 
   def get_token_sol(self):
@@ -333,12 +345,8 @@ class Game(object):
   def store_bn_variables(self, outcome):
     self.bn_variables['game_state'] = self.map_game_state()
     self.bn_variables['attempt'] = self.n_attempt_per_token
-    self.bn_variables['user_react_time'] = self.map_user_react_time()
     self.bn_variables['agent_assistance'] = self.agent_assistance
-    self.bn_variables['agent_feedback'] = self.agent_feedback
     self.bn_variables['user_action'] = outcome
-    self.bn_variables['user_reactivity'] = 0
-    self.bn_variables['user_memory'] = 0
     self.add_info_bn_variables(self.bn_variables)
 
     return self.bn_variables
