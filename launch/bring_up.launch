@@ -9,7 +9,7 @@
       <param name="/user_id" value="$(arg user_id)" />
   <arg name="session_id" default="0000" />
       <param name="/session_id" value="$(arg session_id)" /> 
-  <arg name="objective" default="ascending" />
+  <arg name="objective" default="descending_odd" />
       <param name="/objective" value="$(arg objective)" /> 
   <arg name="with_feedback" default="True" />
       <param name="/with_feedback" value="$(arg with_feedback)" />
