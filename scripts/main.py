@@ -140,7 +140,7 @@ class StateMachine(enum.Enum):
     game.n_tot_sociable += 1
     game.agent_feedback = 1
     if game.detected_token[0] == game.solution[game.n_correct_move]:
-      agent.action["pick"].__call__(positive=True, counter=game.n_attempt_per_token - 1, facial_expression="happy")
+      agent.action["pick"].__call__(positive=True, counter=game.n_attempt_per_token - 1, facial_expression="happy",eyes_coords=(0, 0) )
     else:
       agent.action["pick"].__call__(positive=False, counter=game.n_attempt_per_token - 1, facial_expression="confused", eyes_coords=(0,-80))
     self.CURRENT_STATE = self.S_USER_PLACE
@@ -169,13 +169,13 @@ class StateMachine(enum.Enum):
     tokens_subset = game.get_subset(3)
     token_row = game.get_token_row()
     delay_for_speech = 1
-    game.agent_assistance = 4#agent.get_irl_state_action(state_index=state_index, epsilon=epsilon)
+    game.agent_assistance = agent.get_irl_state_action(state_index=state_index, epsilon=epsilon)
     if game.agent_assistance == 3:
       delay_for_speech = 0
     elif game.agent_assistance == 4:
       delay_for_speech = 2.5
 
-    success = agent.action["assistance"].__call__(lev_id=game.agent_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", eyes_coords=(0,0), tokens=tokens_subset, delay_for_speech=delay_for_speech)
+    success = agent.action["assistance"].__call__(lev_id=game.agent_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", eyes_coords=(0,60), tokens=tokens_subset, delay_for_speech=delay_for_speech)
     self.b_agent_assist_finished = True
     self.b_agent_reengaged_user == False
     self.CURRENT_STATE = self.S_USER_ACTION
@@ -247,7 +247,7 @@ class StateMachine(enum.Enum):
     # get current move and check if it is the one expeceted in the solution list
     elif game.detected_token[0] == game.solution[game.n_correct_move] \
         and game.detected_token[2] == (game.solution.index(game.detected_token[0]) + 1):
-      agent.action["congrats"].__call__(counter=game.n_attempt_per_token-1, facial_expression="happy")
+      agent.action["congrats"].__call__(counter=game.n_attempt_per_token-1, facial_expression="happy", eyes_coords=(0, 0))
       game.outcome = 0
       print("correct_solution ", game.get_n_correct_move())
       self.CURRENT_STATE = self.S_ROBOT_ASSIST
@@ -256,7 +256,7 @@ class StateMachine(enum.Enum):
         or game.detected_token[2] != game.solution.index(game.detected_token[0]) + 1:
       game.outcome = 1
       print("wrong_solution")
-      agent.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad", eyes_coords=(0,-80))
+      agent.action["compassion"].__call__(counter=game.n_attempt_per_token-1, facial_expression="sad", eyes_coords=(0,80))
       self.CURRENT_STATE = self.S_USER_MOVE_TOKEN_BACK
       #if agent replace with
       #self.agent_move_back(game, agent)
@@ -281,6 +281,7 @@ class StateMachine(enum.Enum):
     success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad", eyes_coords=(0, 30))
     while(game.detected_token != (token)):
      pass
+    agent.send_to_rest()
     print("Robot moved the token in the correct location")
     #input = raw_input("move the token in the correct position and press a button")
     self.CURRENT_STATE = self.S_ROBOT_ASSIST
@@ -586,21 +587,20 @@ def main():
 
   sm = StateMachine(1)
 
-  #tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="neutral")
+  #tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="neutral", eyes_coords=(0,0))
 
   while game.get_n_correct_move() < game.task_length:
     current_state=(game.map_game_state(), game.n_attempt_per_token, game.outcome)
     print(current_state)
 
     if sm.CURRENT_STATE.value == sm.S_ROBOT_ASSIST.value:
-
       expected_token = game.get_token_sol()
       print("check if expected token has been moved")
       if game.check_unexpected_move():
         sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
       else:
         sm.CURRENT_STATE = sm.S_USER_ACTION
-        sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.1)
+        sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.4)
         game.avg_agent_assistance_per_move += game.agent_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
