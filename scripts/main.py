@@ -278,7 +278,7 @@ class StateMachine(enum.Enum):
     print(colored("Robot or Therapist moves the correct token as the user reached the max number of attempts", "red"))
     # get the current solution
     token = game.get_token_sol()
-    success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="sad", eyes_coords=(0, 30))
+    success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="neutral", eyes_coords=(0, 30))
     while(game.detected_token != (token)):
      pass
     agent.send_to_rest()
@@ -305,11 +305,9 @@ class StateMachine(enum.Enum):
     # user moved the token in an incorrect location
     # agent moved it back
     # get the initial location of the placed token and move back there
-    token_id, token_from, token_to = game.detected_token
+    token_id, token_from = game.get_token_init_loc(game.detected_token[0])
     success = agent.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1, facial_expression="neutral")
-    if token_to == 0:
-      #means you have the token in your hand
-      token_to = token_from
+
     curr_token_id, _, curr_token_to = game.detected_token
     time_elapsed = 0
     current_time = time.time()
