@@ -547,7 +547,8 @@ def main():
   print("You are playing with the following numbers: ", game.current_board)
   print("The solution of the game is ", game.solution)
   input = raw_input("Press a key to start:")
-
+  if input == "q":
+    exit(-1)
 
   entry_log_params = {"user_id":"user_id", "session":"session", "with_feedback":"with_feedback", "objective":"objective", "timeout":"timeout"}
   entry_log_spec = {'game_state': 'game_state', 'user_react_time': 'user_react_time', 'user_action': 'user_action',
