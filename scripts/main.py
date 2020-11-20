@@ -170,6 +170,7 @@ class StateMachine(enum.Enum):
     token_row = game.get_token_row()
     delay_for_speech = 1
     game.agent_assistance = agent.get_irl_state_action(state_index=state_index, epsilon=epsilon)
+
     if game.agent_assistance == 3:
       delay_for_speech = 0
     elif game.agent_assistance == 4:
@@ -586,7 +587,7 @@ def main():
 
   sm = StateMachine(1)
 
-  #tiago_agent.action["instruction"].__call__("instruction_ascending", facial_expression="neutral", eyes_coords=(0,0))
+  tiago_agent.action["instruction"].__call__("instruction"+str(objective), facial_expression="neutral", eyes_coords=(0,0))
 
   while game.get_n_correct_move() < game.task_length:
     current_state=(game.map_game_state(), game.n_attempt_per_token, game.outcome)
@@ -599,7 +600,7 @@ def main():
         sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
       else:
         sm.CURRENT_STATE = sm.S_USER_ACTION
-        sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.4)
+        sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.5)
         game.avg_agent_assistance_per_move += game.agent_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
@@ -630,7 +631,7 @@ def main():
       game.reset_counters_spec()
       game.reset_detected_token()
 
-  tiago_agent.action["end_game"].__call__(facial_expression="happy")
+  tiago_agent.action["end_game"].__call__(facial_expression="neutral")
   data_log_summary = game.store_info_summary()
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=data_log_summary)
 
