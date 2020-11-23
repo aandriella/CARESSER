@@ -114,8 +114,8 @@
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss35.yaml" />
 
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/rest.yaml" /> 
-
-
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/noddling_yes.yaml" /> 
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/noddling_no.yaml" /> 
 
  
 
