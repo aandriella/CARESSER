@@ -177,6 +177,7 @@ class StateMachine(enum.Enum):
       delay_for_speech = 2.5
 
     success = agent.action["assistance"].__call__(lev_id=game.agent_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", eyes_coords=(0,60), tokens=tokens_subset, delay_for_speech=delay_for_speech)
+
     self.b_agent_assist_finished = True
     self.b_agent_reengaged_user == False
     self.CURRENT_STATE = self.S_USER_ACTION
@@ -276,6 +277,9 @@ class StateMachine(enum.Enum):
     return self.b_agent_outcome_finished
 
   def agent_move_correct_token(self, game, agent):
+    if agent.get_action_state() == 0:
+      # game.react_time_per_token_spec_t0 = time.time()
+      agent.cancel_action()
     print(colored("Robot or Therapist moves the correct token as the user reached the max number of attempts", "red"))
     # get the current solution
     token = game.get_token_sol()
@@ -315,7 +319,7 @@ class StateMachine(enum.Enum):
     while (curr_token_id == token_id and curr_token_to != token_from):
       curr_token_id, _, curr_token_to = game.detected_token
       time_elapsed = time.time() - current_time
-      if time_elapsed >= 5.0:
+      if time_elapsed >= 10.0:
         success = agent.action["move_back"].__call__(who="user", token=game.get_token_sol(),
                                                      counter=game.n_attempt_per_token - 1, facial_expression="neutral")
 
@@ -380,6 +384,7 @@ class StateMachine(enum.Enum):
       if agent.get_action_state() == 0:
         #game.react_time_per_token_spec_t0 = time.time()
         agent.cancel_action()
+        agent.send_to_rest()
 
 
       #TODO try to merge these two if conditions together
@@ -587,7 +592,7 @@ def main():
 
   sm = StateMachine(1)
 
-  tiago_agent.action["instruction"].__call__("instruction"+str(objective), facial_expression="neutral", eyes_coords=(0,0))
+  #tiago_agent.action["instruction"].__call__("instruction_"+str(objective), facial_expression="neutral", eyes_coords=(0,0))
 
   while game.get_n_correct_move() < game.task_length:
     current_state=(game.map_game_state(), game.n_attempt_per_token, game.outcome)
