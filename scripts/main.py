@@ -311,8 +311,7 @@ class StateMachine(enum.Enum):
     # agent moved it back
     # get the initial location of the placed token and move back there
     token_id, token_from = game.get_token_init_loc(game.detected_token[0])
-    success = agent.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1, facial_expression="neutral")
-
+    success = agent.action["move_back"].__call__(who="user", token=game.get_token_sol(), counter=game.n_attempt_per_token-1, facial_expression="sad", eyes_coords=(0, 0))
     curr_token_id, _, curr_token_to = game.detected_token
     time_elapsed = 0
     current_time = time.time()
@@ -447,6 +446,8 @@ class StateMachine(enum.Enum):
         return False
 
     self.CURRENT_STATE = self.S_USER_ACTION
+    agent.reset_facial_expression()
+
     # if the user picks a token and SOCIABLE is active
     if user_pick_token(self, game, agent):
       if game.with_feedback:
