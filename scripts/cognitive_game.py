@@ -371,6 +371,7 @@ class Game(object):
     self.react_time_per_token_gen_t0 = 0
     self.elapsed_time_per_token_gen_t1 = 0
     self.elapsed_time_per_token_gen_t0 = 0
+    self.n_timeout_per_token = 0
 
 
   def reset_detected_token(self):
