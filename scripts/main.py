@@ -425,6 +425,7 @@ def main():
   with_feedback = rospy.get_param("/with_feedback")
   objective = rospy.get_param("/objective")
   timeout = rospy.get_param("/timeout")
+  pro_exercise = rospy.get_param("/pro_ex")
 
   # we create the game instance
   game = Game(board_size=(5, 4), task_length=5, n_max_attempt_per_token=4,
@@ -434,6 +435,15 @@ def main():
               bn_caregiver_assistance={'lev_0':0,'lev_1':1,'lev_2':2,'lev_3':3,'lev_4':4,'lev_5':5},
               bn_user_react_time={'fast': 5, 'normal': 10, 'slow': 15},
               bn_user_action={'correct': 0, 'wrong': 1, 'timeout': 2})
+
+  if pro_exercise == "0":
+    print("no pro")
+  elif pro_exercise == "s1":
+    game.solution = ['698', '947', '693', '1565', '1780']
+  elif pro_exercise == "s2":
+    game.solution = ['894', '1279', '1268', '619', '1473']
+  elif pro_exercise == "s3":
+    game.solution = ['499', '587', '694', '1558', '1427']
 
   #user_id = raw_input("please, insert the id of the user:")
   path = os.path.abspath(__file__)
@@ -510,7 +520,7 @@ def main():
       if game.check_unexpected_move():
         sm.CURRENT_STATE = sm.S_CAREGIVER_OUTCOME
       # if (expected_token[0]) in (game.get_board_event())[0:5]:
-      #   print("expected token is already on the board:", expected_token)
+      #   print("expe   cted token is already on the board:", expected_token)
       #   game.detected_token = expected_token
       #   game.react_time_per_token_spec_t1 = 0
       #   sm.CURRENT_STATE = sm.S_CAREGIVER_OUTCOME
