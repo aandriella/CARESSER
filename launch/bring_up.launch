@@ -8,7 +8,11 @@
 	        <param name="/session_id" value="$(arg session_id)" />
 	   <arg name="objective" default="ascending" />
 	        <param name="/objective" value="$(arg objective)" />
-	    <arg name="timeout" default="15" />
+	   <arg name="timeout" default="15" />
 	        <param name="/timeout" value="$(arg timeout)" />
+	   <arg name="pro_ex" default="0" />
+	        <param name="/pro_ex" value="$(arg pro_ex)" />
+
+
 
 </launch>
