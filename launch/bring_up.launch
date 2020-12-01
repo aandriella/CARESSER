@@ -15,6 +15,9 @@
       <param name="/with_feedback" value="$(arg with_feedback)" />
   <arg name="timeout" default="15" />
       <param name="/timeout" value="$(arg timeout)" />
+  <arg name="pro_user" default="0" />
+      <param name="/pro_user" value="$(arg pro_user)" />
+
 
 
  <!--Here are all the robot movements needed -->
@@ -60,6 +63,11 @@
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/c43.yaml" />
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/c44.yaml" />
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/c45.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/cb41.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/cb42.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/cb43.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/cb44.yaml" />
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/cb45.yaml" />
 
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/o11.yaml" />
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/o12.yaml" />
@@ -113,6 +121,7 @@
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss34.yaml" />
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/ss35.yaml" />
 
+  <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/head_rest.yaml" /> 
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/rest.yaml" /> 
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/noddling_yes.yaml" /> 
   <rosparam command="load" file="$(find robot_behaviour)/src/robot_behaviour/config/movements/noddling_no.yaml" /> 
