@@ -1,0 +1,6 @@
+cum_elapsed_time,game_state,user_action,avg_agent_assistance_per_move,attempt,n_agent_feedback,from,to,timeout,cum_react_time,token_id
+4.333,0,,0.0,2,0,8,1,0,7.182,698
+1.469,0,,1.0,3,0,6,2,1,3.621,947
+1.021,1,,0.0,1,0,19,3,0,5.369,693
+3.688,1,,1.0,3,0,12,4,0,17.07,1565
+0.938,2,,0.0,1,0,13,5,0,1.166,1780
