@@ -157,11 +157,9 @@ class StateMachine(enum.Enum):
        True when the action has been completed
     '''
     print("ROBOT GET ACTION ",agent.get_action_state())
-    if agent.get_action_state() == 1 or agent.get_action_state() == 0:
+    if  agent.get_action_state() == 0 or agent.get_action_state() == 1:
       agent.cancel_action()
 
-    # if agent.get_action_state() == 0:
-    #   agent.cancel_action()
 
     print(colored("R_ASSISTANCE", 'green'))
     #recall all the information you may need for providing assistance
@@ -176,6 +174,7 @@ class StateMachine(enum.Enum):
     elif game.agent_assistance == 4:
       delay_for_speech = 2.5
 
+    rospy.sleep(1.0)
     success = agent.action["assistance"].__call__(lev_id=game.agent_assistance, row=token_row, counter=game.n_attempt_per_token-1, token=token_sol, facial_expression="neutral", eyes_coords=(0,60), tokens=tokens_subset, delay_for_speech=delay_for_speech)
 
     self.b_agent_assist_finished = True
@@ -284,9 +283,10 @@ class StateMachine(enum.Enum):
     # get the current solution
     token = game.get_token_sol()
     success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="neutral", eyes_coords=(0, 30))
+    #success = agent.action["assistance"].__call__(lev_id=5, row=0, counter=game.n_attempt_per_token-1, token=token, facial_expression="neutral", eyes_coords=(0,60), tokens=[], delay_for_speech=1.0)
     while(game.detected_token != (token)):
      pass
-    agent.send_to_rest()
+    #agent.send_to_rest()
     print("Robot moved the token in the correct location")
     #input = raw_input("move the token in the correct position and press a button")
     self.CURRENT_STATE = self.S_ROBOT_ASSIST
@@ -501,6 +501,8 @@ def main():
   objective = rospy.get_param("/objective")
   session_id = rospy.get_param("/session_id")
   timeout = rospy.get_param("/timeout")
+  pro_user = rospy.get_param("/pro_user")
+
 
   bn_game_state = {'beg': 2, 'mid': 4, 'end': 5}
   bn_attempt = {'att_1': 0, 'att_2': 1, 'att_3': 2, 'att_4': 3}
@@ -551,6 +553,18 @@ def main():
   file_summary = path_name + "/log_summary.csv"
   file_bn_variables = path_name + "/bn_variables.csv"
 
+  if pro_user == 0:
+    pass
+  elif pro_user == "s1":
+    game.solution = ["698", "947", "693", "1565", "1780"]
+  elif pro_user == "s2":
+    game.solution = ["668", "1279", "1268", "619", "1473"]
+  elif pro_user == "s3":
+    game.solution = ["499", "1199", "565", "1558", "1427"]
+  elif pro_user == "demo":
+    game.solution = ["899", "939", "929",  "278", "934"]
+
+
   print("You are playing with the following numbers: ", game.current_board)
   print("The solution of the game is ", game.solution)
   input = raw_input("Press a key to start:")
@@ -600,13 +614,13 @@ def main():
     print(current_state)
 
     if sm.CURRENT_STATE.value == sm.S_ROBOT_ASSIST.value:
-      expected_token = game.get_token_sol()
+      #expected_token = game.get_token_sol()
       print("check if expected token has been moved")
       if game.check_unexpected_move():
         sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
       else:
         sm.CURRENT_STATE = sm.S_USER_ACTION
-        sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.5)
+        sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.2)
         game.avg_agent_assistance_per_move += game.agent_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
