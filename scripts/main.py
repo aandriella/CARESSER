@@ -556,13 +556,13 @@ def main():
   if pro_user == 0:
     pass
   elif pro_user == "s1":
-    game.solution = ["698", "947", "693", "1565", "1780"]
+    game.solution = ["698", "894", "947", "298", "693"]
   elif pro_user == "s2":
-    game.solution = ["668", "1279", "1268", "619", "1473"]
+    game.solution = ["587", "667", "593", "619", "753"]
   elif pro_user == "s3":
-    game.solution = ["499", "1199", "565", "1558", "1427"]
+    game.solution = ["499", "939", "857", "667", "584"]
   elif pro_user == "demo":
-    game.solution = ["899", "939", "929",  "278", "934"]
+    game.solution = ["899", "929", "694", "971", "848"]
 
 
   print("You are playing with the following numbers: ", game.current_board)
