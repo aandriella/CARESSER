@@ -439,11 +439,11 @@ def main():
   if pro_exercise == "0":
     print("no pro")
   elif pro_exercise == "s1":
-    game.solution = ['698', '947', '693', '1565', '1780']
+    game.solution = ['698', '894', '947', '289', '693']
   elif pro_exercise == "s2":
-    game.solution = ['894', '1279', '1268', '619', '1473']
+    game.solution = ['587', '667', '593', '619', '671']
   elif pro_exercise == "s3":
-    game.solution = ['499', '587', '694', '1558', '1427']
+    game.solution = ['499', '939', '857', '667', '584' ]
 
   #user_id = raw_input("please, insert the id of the user:")
   path = os.path.abspath(__file__)
@@ -461,6 +461,8 @@ def main():
   print("You are playing with the following numbers: ", game.current_board)
   print("The solution of the game is ", game.solution)
   input = raw_input("Press a key to start:")
+  if input=="q":
+    exit(-1)
 
   file_params = path_name + "/log_params.csv"
   file_spec = path_name + "/log_spec.csv"
@@ -515,7 +517,7 @@ def main():
         #sm.play_sound("something_went_wrong_trim.mp3", 1)
 
       #check if something has happened that we do not expect:
-      expected_token = game.get_token_sol()
+      #expected_token = game.get_token_sol()
       print("Check if expected token has been moved")
       if game.check_unexpected_move():
         sm.CURRENT_STATE = sm.S_CAREGIVER_OUTCOME
