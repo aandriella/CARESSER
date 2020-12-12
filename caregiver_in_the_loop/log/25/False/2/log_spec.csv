@@ -1,0 +1,7 @@
+game_state,user_action,attempt,caregiver_feedback,react_time,caregiver_assistance,user_react_time,from,elapsed_time,to,timeout,token_id
+0,2,0,0,15,0,0,,0,,0,
+0,0,1,0,0.0,0,2,18,0.0,1,0,587
+0,0,0,0,4.209,0,2,15,0.892,2,0,667
+1,2,0,0,15,0,0,,0,,0,
+1,1,1,0,9.209,0,1,13,1.234,0,1,619
+1,1,2,0,0.0,0,2,13,0.0,4,1,619
