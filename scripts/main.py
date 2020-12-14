@@ -282,8 +282,8 @@ class StateMachine(enum.Enum):
     print(colored("Robot or Therapist moves the correct token as the user reached the max number of attempts", "red"))
     # get the current solution
     token = game.get_token_sol()
-    success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="neutral", eyes_coords=(0, 30))
-    #success = agent.action["assistance"].__call__(lev_id=5, row=0, counter=game.n_attempt_per_token-1, token=token, facial_expression="neutral", eyes_coords=(0,60), tokens=[], delay_for_speech=1.0)
+    #success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="neutral", eyes_coords=(0, 30))
+    success = agent.action["assistance"].__call__(lev_id=5, row=0, counter=game.n_attempt_per_token-1, token=token, facial_expression="neutral", eyes_coords=(0,60), tokens=[], delay_for_speech=1.0)
     while(game.detected_token != (token)):
      pass
     #agent.send_to_rest()
@@ -562,7 +562,7 @@ def main():
   elif pro_user == "s3":
     game.solution = ["499", "939", "857", "667", "584"]
   elif pro_user == "demo":
-    game.solution = ["899", "929", "694", "971", "848"]
+    game.solution = ["899", "929", "848", "694", "971"]
 
 
   print("You are playing with the following numbers: ", game.current_board)
