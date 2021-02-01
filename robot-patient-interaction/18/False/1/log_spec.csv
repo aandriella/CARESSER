@@ -1,9 +1,4 @@
 game_state,user_action,agent_assistance,attempt,react_time,user_react_time,from,elapsed_time,to,agent_feedback,timeout,token_id
-0,0,0,1,1.441,2,6,0.516,1,0,0,947
-0,1,0,1,9.772,1,14,1.145,14,0,0,537
-0,1,1,2,0.0,2,14,0.864,0,0,0,537
-0,1,2,3,0.013,2,2,0.0,14,0,0,537
-game_state,user_action,agent_assistance,attempt,react_time,user_react_time,from,elapsed_time,to,agent_feedback,timeout,token_id
 0,0,0,1,14.6,0,20,0.95,1,0,0,947
 0,2,1,1,15,0,,0,,0,0,
 0,1,2,2,11.308,0,2,2.124,15,0,1,894
