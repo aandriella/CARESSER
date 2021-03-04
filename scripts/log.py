@@ -34,7 +34,7 @@ def main():
   entries_value = {'token_id': 17, 'from': 15, 'to': 2, 'react_time': 1.23, 'elapsed_time': 5.02}
   entries_name = {'token_id': 'token_id', 'from': 'from', 'to': 'to', 'react_time': 'react_time', 'elapsed_time': 'elapsed_time'}
 
-  file = '/home/aandriella/pal/cognitive_game_ws/src/carf/caregiver_in_the_loop/log/csv.txt'
+  file = '/home/pal/carf_ws/src/carf/caregiver_in_the_loop/log/1000/True/10/log_spec.csv'
   log = Log(file, fieldnames_spec=variables, fieldnames_gen=variables, fieldnames_sum=variables)
   # log.add_row_entry(entries_name, log.fieldnames_spec)
   # log.add_row_entry(entries_value, log.fieldnames_spec)

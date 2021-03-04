@@ -282,8 +282,8 @@ class StateMachine(enum.Enum):
     print(colored("Robot or Therapist moves the correct token as the user reached the max number of attempts", "red"))
     # get the current solution
     token = game.get_token_sol()
-    #success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="neutral", eyes_coords=(0, 30))
-    success = agent.action["assistance"].__call__(lev_id=5, row=0, counter=game.n_attempt_per_token-1, token=token, facial_expression="neutral", eyes_coords=(0,60), tokens=[], delay_for_speech=1.0)
+    success = agent.action["max_attempt"].__call__(token=token, counter=game.n_attempt_per_token-1, facial_expression="neutral", eyes_coords=(0, 30))
+    #success = agent.action["assistance"].__call__(lev_id=5, row=0, counter=game.n_attempt_per_token-1, token=token, facial_expression="neutral", eyes_coords=(0,60), tokens=[], delay_for_speech=1.0)
     while(game.detected_token != (token)):
      pass
     #agent.send_to_rest()
@@ -556,7 +556,7 @@ def main():
   if pro_user == 0:
     pass
   elif pro_user == "s1":
-    game.solution = ["698", "894", "947", "298", "693"]
+    game.solution = ["698", "894", "947", "289", "693"]
   elif pro_user == "s2":
     game.solution = ["587", "667", "593", "619", "753"]
   elif pro_user == "s3":
@@ -620,7 +620,7 @@ def main():
         sm.CURRENT_STATE = sm.S_ROBOT_OUTCOME
       else:
         sm.CURRENT_STATE = sm.S_USER_ACTION
-        sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.2)
+        sm.agent_provide_assistance(game, tiago_agent, state_index=states_space_list.index(tuple(current_state)), epsilon=0.3)
         game.avg_agent_assistance_per_move += game.agent_assistance
 
     elif sm.CURRENT_STATE.value == sm.S_USER_ACTION.value:
@@ -651,7 +651,7 @@ def main():
       game.reset_counters_spec()
       game.reset_detected_token()
 
-  tiago_agent.action["end_game"].__call__(facial_expression="neutral")
+  tiago_agent.action["end_game"].__call__(facial_expression="happy")
   data_log_summary = game.store_info_summary()
   log.add_row_entry(log_filename=file_summary, fieldnames=entry_log_summary, data=data_log_summary)
 

@@ -227,7 +227,7 @@ class Game(object):
     return (token_id, token_from)
 
   def get_token_sol(self):
-    '''This method returns the correct token to move its initial location its final location'''
+    '''This method returns the correct token to move from its initial location its final location'''
     token_id = self.solution[self.n_correct_move]
     token_from = [index for index in range(len(self.initial_board)) if self.initial_board[index] == token_id].pop()+1
     token_to = self.n_correct_move+1
