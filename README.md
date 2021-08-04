@@ -1,4 +1,4 @@
-# CARESSER: aCtive leARning agEnt aSsiStive bEhaviouR
+# CARESSER: Personalised Robot-assisted Cognitive Training
 
 #### "Introducing CARESSER: a Framework for in Situ Learning Robot Social Assistance from Expert Knowledge and Demonstrations" [Website link](http://www.iri.upc.edu/groups/perception/#CARESSER)
 
@@ -6,7 +6,7 @@
 
 
 #### Packages:
-- [CARF (Personalised Robot-Assisted Cognitive Training)](https://github.com/aandriella/carf)
+- [CARESSER (aCtive leARning agEnt aSsiStive bEhaviouR)](https://github.com/aandriella/carf)
 The main package in change of generating the exercise and managing the interactions between the patients and the therapist (either human or robot). It has two branches:
 -- caregiver_in_the_loop: the therapist is the human
 -- robot_in_the_loop: the therapist is the robot
