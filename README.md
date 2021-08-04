@@ -46,10 +46,10 @@ The code is platform-dependent. In order to run this code you need to have a RFI
  roslaunch CARESSER bring_up.launch 
  --language en_GB --config_path "$(path/to/sentences/folder)" --user_id 1 --session_id 1 --objective "descending" --with_feedback True --timeout 15  
 ```
-where :
--- language is the language supported by the TIAGo
--- config_path is the folder with the scripted sentences
--- user_id is the is assigned to the user 
--- session_id is the id of the session objective is the type of exercise (e.g "ascending", "descending", "ascending_odd", etc ...) 
--- with_feedback is if we use [SOCIABLE](http://www.iri.upc.edu/files/scidoc/2353-Discovering-SOCIABLE:-Using-a-conceptual-model-to-evaluate-the-legibility-and-effectiveness-of-backchannel-cues-in-an-entertainment-scenario.pdf) 
--- timeout is the waiting time before providing the user with assistance again if they do not make any move.
+##### where:
+- language is the language supported by the TIAGo
+- config_path is the folder with the scripted sentences
+- user_id is the is assigned to the user 
+- session_id is the id of the session objective is the type of exercise (e.g "ascending", "descending", "ascending_odd", etc ...) 
+- with_feedback is if we use [SOCIABLE](http://www.iri.upc.edu/files/scidoc/2353-Discovering-SOCIABLE:-Using-a-conceptual-model-to-evaluate-the-legibility-and-effectiveness-of-backchannel-cues-in-an-entertainment-scenario.pdf) 
+- timeout is the waiting time before providing the user with assistance again if they do not make any move.
