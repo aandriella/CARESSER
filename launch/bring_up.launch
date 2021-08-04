@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="carf" type="main.py" name="carf" output="screen"/>
+  <node pkg="CARESSER" type="main.py" name="CARESSER" output="screen"/>
 	   <arg name="user_id" default="0000" />
 	        <param name="/user_id" value="$(arg user_id)" />
 	   <arg name="with_feedback" default="True" />

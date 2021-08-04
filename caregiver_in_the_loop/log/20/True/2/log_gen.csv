@@ -1,6 +1,0 @@
-cum_elapsed_time,to,cum_react_time,from,timeout,user_action,token_id,caregiver_feedback,avg_caregiver_assistance_per_move,attempt
-0.719,1,10.149,16,0,,715,0,0.0,1
-0.695,2,7.193,19,0,,671,0,0.0,1
-1.343,3,17.605,9,0,,667,0,0.0,2
-0.551,4,14.443,6,1,,661,0,0.0,3
-0.727,5,6.909,20,0,,619,0,0.0,1
