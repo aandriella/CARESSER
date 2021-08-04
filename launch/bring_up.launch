@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="carf" type="main.py" name="carf" output="screen"/>
+  <node pkg="carf" type="main.py" name="CARESSER" output="screen"/>
   
   <arg name="language" default="en_GB"/>
       <param name="/language" value="$(arg language)" />
