@@ -9,7 +9,7 @@
 ```
 
 #### Packages:
-- [CARESSER (aCtive leARning agEnt aSsiStive bEhaviouR)](https://github.com/aandriella/carf)
+- [CARESSER (aCtive leARning agEnt aSsiStive bEhaviouR)](https://github.com/aandriella/CARESSER)
 The main package in change of generating the exercise and managing the interactions between the patients and the therapist (either human or robot). It has two branches (ignore the main):
 -- caregiver_in_the_loop: the therapist is the human
 -- robot_in_the_loop: the therapist is the robot
@@ -21,11 +21,11 @@ This package defines the TIAGo behaviours (SPEECH, GESTURE and FACIAL EXPRESSION
 This package provides the positions of the tokens on the board (RFID + ARDUINO)
 - [Robot Face Visalizer](https://github.com/aandriella/robot_face_visualizer)
 This package reproduces on a screen some facial expressions 
-- [Robot Facial Expression](https://github.com/aandriella/robot_facial_expression)
+- [Robot Facial Expression](https://github.com/aandriella/robot_face_expression)
 This pakage generates the facial expressions using OpenCV, it is based on previous work from ... on the Baxter robot
-- [MaxEntRL](https://github.com/aandriella/MaxEntRL)
+- [MaxEntIRL](https://github.com/aandriella/MaxEntIRL)
 This package generates the robot's policy by the data provided by the GOAL simulator
 The IRL code is based on the work of [ Maximilian Luz](https://github.com/qzed/irl-maxent).
-- [Generative Mutual Shaping RL](https://github.com/aandriella/GenMutShapRL)
-This package generates syntetic data by starting from the BN models of the patient and the robot. The BNs are built by gathering data from real interactions and therapist's expertise on the patient cognitive abilities.
+- [GOAL sim](https://github.com/aandriella/GOAL)
+This package generates the simulation as well as the policy to embed on the robot by starting from the BN models of the patient and the robot. The BNs are built by gathering data from real interactions and therapist's expertise on the patient cognitive abilities.
 
