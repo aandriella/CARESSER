@@ -21,12 +21,12 @@ This package defines the TIAGo behaviours (SPEECH, GESTURE and FACIAL EXPRESSION
 This package provides the positions of the tokens on the board (RFID + ARDUINO)
 - [Robot Face Visalizer](https://github.com/aandriella/robot_face_visualizer)
 This package reproduces on a screen some facial expressions 
-- [Robot Facial Expression](https://github.com/aandriella/robot_face_expression)
+- [Robot Face Expression](https://github.com/aandriella/robot_face_expression)
 This pakage generates the facial expressions using OpenCV, it is based on previous work from ... on the Baxter robot
 - [MaxEntIRL](https://github.com/aandriella/MaxEntIRL)
 This package generates the robot's policy by the data provided by the GOAL simulator
 The IRL code is based on the work of [ Maximilian Luz](https://github.com/qzed/irl-maxent).
 - [GOAL sim](https://github.com/aandriella/GOAL)
 This package generates the simulation as well as the policy to embed on the robot by starting from the BN models of the patient and the robot. The BNs are built by gathering data from real interactions and therapist's expertise on the patient cognitive abilities.
-- [Task Env] (https://github.com/aandriella/task_environment)
+- [Task Env](https://github.com/aandriella/task_environment)
 This package contains the cognitive training domain both for the IRL algorithm and for the real time interaction between the patient and the therapist (human or robot)
