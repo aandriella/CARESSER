@@ -4,10 +4,13 @@
 
 ##### Authors: Antonio Andriella, Carme Torras, Carla Abdelnour and Guillem Alenyà
 
+```diff
+- N.B: main branch does not work, need to use either caregiver_in_the_loop or robot_in_the_loop
+```
 
 #### Packages:
 - [CARESSER (aCtive leARning agEnt aSsiStive bEhaviouR)](https://github.com/aandriella/carf)
-The main package in change of generating the exercise and managing the interactions between the patients and the therapist (either human or robot). It has two branches:
+The main package in change of generating the exercise and managing the interactions between the patients and the therapist (either human or robot). It has two branches (ignore the main):
 -- caregiver_in_the_loop: the therapist is the human
 -- robot_in_the_loop: the therapist is the robot
 - [Bayesian Network Generative Model](https://github.com/aandriella/BN_GenerativeModel)
@@ -25,3 +28,4 @@ This package generates the robot's policy by the data provided by the GOAL simul
 The IRL code is based on the work of [ Maximilian Luz](https://github.com/qzed/irl-maxent).
 - [Generative Mutual Shaping RL](https://github.com/aandriella/GenMutShapRL)
 This package generates syntetic data by starting from the BN models of the patient and the robot. The BNs are built by gathering data from real interactions and therapist's expertise on the patient cognitive abilities.
+
