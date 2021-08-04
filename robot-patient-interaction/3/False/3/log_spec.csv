@@ -1,6 +1,0 @@
-game_state,user_action,agent_assistance,attempt,react_time,user_react_time,from,elapsed_time,to,agent_feedback,timeout,token_id
-0,0,0,1,12.99,0,17,1.023,1,0,0,565
-0,0,0,1,12.968,0,12,0.454,2,0,0,499
-1,0,1,1,12.947,0,13,0.301,3,0,0,321
-1,0,0,1,4.775,2,6,0.801,4,0,0,311
-2,0,0,1,12.119,0,16,1.365,5,0,0,177
