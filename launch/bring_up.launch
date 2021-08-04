@@ -15,9 +15,9 @@
       <param name="/with_feedback" value="$(arg with_feedback)" />
   <arg name="timeout" default="15" />
       <param name="/timeout" value="$(arg timeout)" />
-  <arg name="pro_user" default="0" />
+  <!-- <arg name="pro_user" default="0" />
       <param name="/pro_user" value="$(arg pro_user)" />
-
+-->
 
 
  <!--Here are all the robot movements needed -->
