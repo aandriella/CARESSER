@@ -28,4 +28,5 @@ This package generates the robot's policy by the data provided by the GOAL simul
 The IRL code is based on the work of [ Maximilian Luz](https://github.com/qzed/irl-maxent).
 - [GOAL sim](https://github.com/aandriella/GOAL)
 This package generates the simulation as well as the policy to embed on the robot by starting from the BN models of the patient and the robot. The BNs are built by gathering data from real interactions and therapist's expertise on the patient cognitive abilities.
-
+- [Task Env] (https://github.com/aandriella/task_environment)
+This package contains the cognitive training domain both for the IRL algorithm and for the real time interaction between the patient and the therapist (human or robot)
