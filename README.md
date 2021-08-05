@@ -4,7 +4,7 @@
 
 ##### Authors: Antonio Andriella, Carme Torras, Carla Abdelnour and Guillem Alenyà
 
-![Screenshot](CARESSER.png)
+![The CARESSER Framework](CARESSER.jpg)
 
 
 ```diff
