@@ -23,7 +23,7 @@ This package generates two bayesian models by combining the data collected from 
 This package defines the TIAGo assistive behaviours. We defined 7 different levels of assistance combining speech, gesture and facial expressions.
 - [Board State](https://github.com/aandriella/board_state)
 This package provides the positions of the tokens on the board (RFID + Arduino).
-- [Robot Face Visalizer](https://github.com/aandriella/robot_face_visualizer)
+- [Robot Face Visualizer](https://github.com/aandriella/robot_face_visualizer)
 This package reproduces on a screen some facial expressions.
 - [Robot Face Expression](https://github.com/aandriella/robot_face_expression)
 This pakage generates the facial expressions using OpenCV, it is based on previous work of [Bilgehan NAL](https://github.com/bilgehannal/baxter_face_software) on the Baxter robot.
