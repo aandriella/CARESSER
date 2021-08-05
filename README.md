@@ -5,7 +5,7 @@
 ##### Authors: Antonio Andriella, Carme Torras, Carla Abdelnour and Guillem Alenyà
 
 <p align="center">
-  <img src="CARESSER.jpg" width="350" title="hover text">
+  <img src="CARESSER.png" width="350" title="CARESSER FRAMEWORK">
 </p>
 
 ```diff
