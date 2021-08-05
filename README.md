@@ -4,8 +4,9 @@
 
 ##### Authors: Antonio Andriella, Carme Torras, Carla Abdelnour and Guillem Alenyà
 
-![The CARESSER Framework](CARESSER.jpg)
-
+<p align="center">
+  <img src="CARESSER.jpg" width="350" title="hover text">
+</p>
 
 ```diff
 - N.B: main branch does not work, need to use either caregiver_in_the_loop or robot_in_the_loop
